@@ -16,17 +16,21 @@ const nationalChainsPath = path.join(__dirname, 'data', 'national-chains.json');
 const nationalChains = JSON.parse(fs.readFileSync(nationalChainsPath, 'utf8'));
 
 function normalize(value) {
-  return String(value || '').toLowerCase().trim();
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9 ]/g, '');
 }
 
 function searchNationalChains(query) {
   const term = normalize(query);
   if (!term) return nationalChains;
   return nationalChains.filter((item) => {
-    const haystack = [item.name, item.category, item.discount, item.conditions, item.city, item.state]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
+    const haystack = normalize(
+      [item.name, item.category, item.discount, item.conditions, item.city, item.state]
+        .filter(Boolean)
+        .join(' ')
+    );
     return haystack.includes(term);
   });
 }
