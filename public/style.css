@@ -1,7 +1,7 @@
 :root {
-  --bg: #07111f;
-  --panel: #16263b;
-  --card: #1c3147;
+  --bg: #1a0d40;
+  --panel: #2d1a65;
+  --card: #3a2472;
   --text: #f7fbff;
   --muted: #d9e5f3;
   --border: rgba(255,255,255,0.12);
@@ -16,9 +16,9 @@ body {
   font-family: 'Inter', Arial, sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at top, rgba(102, 226, 207, 0.12), transparent 18%),
-    radial-gradient(circle at right top, rgba(255, 213, 111, 0.12), transparent 22%),
-    linear-gradient(145deg, #07111f 0%, #0d1826 45%, #08101a 100%);
+    radial-gradient(circle at top, rgba(160, 100, 255, 0.15), transparent 22%),
+    radial-gradient(circle at right top, rgba(255, 213, 111, 0.10), transparent 22%),
+    linear-gradient(145deg, #1a0d40 0%, #2d1a65 45%, #160a38 100%);
 }
 
 img { max-width: 100%; }
@@ -31,7 +31,7 @@ img { max-width: 100%; }
 
 .hero-card,
 .panel {
-  background: linear-gradient(145deg, rgba(22, 38, 59, 0.98), rgba(14, 25, 37, 0.98));
+  background: linear-gradient(145deg, rgba(45, 26, 101, 0.98), rgba(26, 13, 64, 0.98));
   border: 1px solid var(--border);
   border-radius: 28px;
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
@@ -82,7 +82,7 @@ img { max-width: 100%; }
   min-height: 100%;
   border-radius: 24px;
   background: linear-gradient(145deg, #ffe6a6, #ffb96d);
-  color: #0e1825;
+  color: #1a0d40;
   font-family: 'Trebuchet MS', 'Comic Sans MS', 'Segoe UI', sans-serif;
   font-size: clamp(4rem, 12vw, 6rem);
   line-height: 1;
@@ -175,7 +175,7 @@ button {
   border-radius: 999px;
   padding: 13px 16px;
   background: linear-gradient(135deg, #ffd56f, #ff9d5c);
-  color: #122132;
+  color: #1a0d40;
   font: inherit;
   font-weight: 900;
   cursor: pointer;
@@ -217,7 +217,7 @@ button {
 .result-card {
   display: grid;
   gap: 10px;
-  background: linear-gradient(145deg, #22384e, #172535);
+  background: linear-gradient(145deg, #3e2880, #2d1a65);
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 24px;
   padding: 14px;
@@ -279,7 +279,7 @@ button {
 /* ── Ask For Me button ── */
 .btn-ask {
   background: linear-gradient(135deg, #ffd56f, #ffb830);
-  color: #0a1827;
+  color: #1a0d40;
   font-weight: 900;
   font-size: 1rem;
   padding: 12px 18px;
@@ -299,7 +299,7 @@ button {
 }
 
 .modal-card {
-  background: linear-gradient(145deg, #1c3147, #162535);
+  background: linear-gradient(145deg, #3a2472, #2d1a65);
   border: 1px solid rgba(255, 213, 111, 0.35);
   border-radius: 28px;
   padding: 28px;
@@ -362,7 +362,7 @@ button {
 
 .btn-show {
   background: linear-gradient(135deg, var(--mint), #3db9a8);
-  color: #08202e;
+  color: #1a0d40;
   font-weight: 900;
 }
 
@@ -392,7 +392,7 @@ button {
 
 .show-script {
   font-size: clamp(1.5rem, 4.5vw, 2.4rem);
-  color: #0a1827;
+  color: #1a0d40;
   line-height: 1.7;
   max-width: 700px;
   font-style: italic;
@@ -400,7 +400,7 @@ button {
 
 .show-close {
   margin-top: 48px;
-  background: #0a1827;
+  background: #1a0d40;
   color: #ffffff;
   font-size: 1.1rem;
   padding: 18px 36px;
