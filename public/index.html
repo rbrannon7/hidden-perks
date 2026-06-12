@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HiddenPerks</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Baloo+2:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="hero-card">
+        <img class="hero-image" src="hidden-perks-logo-1.jpg" alt="Hidden Perks logo" />
+        <div class="title-row">
+          <div class="title-stack">
+            <h1>HIDDEN PERKS</h1>
+            <p class="subtitle">UNCOVER GREAT SENIOR DISCOUNTS FOR RESTAURANTS</p>
+          </div>
+        </div>
+      </header>
+
+      <section class="panel search-panel">
+        <div class="search-copy">
+          <h2>Search Restaurant</h2>
+          <p>Type the restaurant name here:</p>
+        </div>
+        <form id="searchForm" class="search-form">
+          <div class="search-row">
+            <input id="queryInput" name="q" type="search" placeholder="Example: Cracker Barrel, Olive Garden, Starbucks" />
+            <button type="submit">Search</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel results-panel">
+        <div class="panel-heading-row">
+          <div>
+            <p class="eyebrow">Results</p>
+            <h2>Discount details</h2>
+          </div>
+          <span id="resultCount" class="pill">0 results</span>
+        </div>
+        <div id="resultsList" class="results-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="panel submit-panel">
+        <button type="button" class="toggle-submit" id="toggleSubmit">
+          Know a local senior discount? Submit it here ↓
+        </button>
+        <div id="submitSection" hidden>
+          <div class="submit-section-content">
+            <h2>Submit a Local Discount</h2>
+            <p class="lede">Help your neighbors! Submit a local business senior discount for review. We'll verify it and add it to the app.</p>
+            <form id="submitForm" class="search-form">
+              <label>Business Name *
+                <input id="sub-name" name="name" type="text" placeholder="e.g. Mom's Kitchen" required />
+              </label>
+              <label>Discount Description *
+                <input id="sub-discount" name="discount" type="text" placeholder="e.g. 10% off for seniors 60+" required />
+              </label>
+              <label>Address
+                <input id="sub-address" name="address" type="text" placeholder="123 Main St" />
+              </label>
+              <div class="city-row">
+                <label>City
+                  <input id="sub-city" name="city" type="text" />
+                </label>
+                <label>State
+                  <input id="sub-state" name="state" type="text" maxlength="2" placeholder="UT" />
+                </label>
+                <label>ZIP
+                  <input id="sub-zip" name="zip" type="text" maxlength="5" placeholder="84321" />
+                </label>
+              </div>
+              <label>Age Requirement
+                <input id="sub-age" name="ageRequirement" type="number" min="50" max="99" placeholder="e.g. 55" />
+              </label>
+              <label>Any Conditions or Notes
+                <input id="sub-conditions" name="conditions" type="text" placeholder="e.g. Must ask at register, lunch only" />
+              </label>
+              <label>Your Name (optional)
+                <input id="sub-by" name="submittedBy" type="text" placeholder="First name or anonymous" />
+              </label>
+              <div id="submitMsg" class="submit-msg" hidden></div>
+              <button type="submit">Submit Discount</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Ask For Me modal -->
+    <div id="askModal" class="modal-overlay" hidden aria-modal="true" role="dialog" aria-labelledby="askModalTitle">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2 id="askModalTitle">Ask For Me</h2>
+          <button type="button" class="modal-close" id="closeAsk" aria-label="Close">✕</button>
+        </div>
+        <p class="modal-hint">Show this to the cashier or read it aloud:</p>
+        <div class="modal-script" id="askScript" aria-live="polite"></div>
+        <div class="modal-actions">
+          <button type="button" id="btnShow" class="btn-show">Show to Cashier</button>
+          <button type="button" id="btnCopy" class="btn-copy">Copy Text</button>
+          <button type="button" id="btnText" class="btn-text">Text to Myself</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full-screen show mode — plain white, big text for cashier to read -->
+    <div id="showMode" class="show-overlay" hidden>
+      <div class="show-content">
+        <div class="show-script" id="showScript"></div>
+        <button type="button" class="show-close" id="closeShow">Tap to Go Back</button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

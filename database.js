@@ -1,0 +1,77 @@
+const path = require('path');
+const fs = require('fs');
+
+const dbDir = path.join(__dirname, 'db');
+const submissionsFile = path.join(dbDir, 'submissions.json');
+
+function ensureStorage() {
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  if (!fs.existsSync(submissionsFile)) {
+    fs.writeFileSync(submissionsFile, '[]', 'utf8');
+  }
+}
+
+function readSubmissions() {
+  ensureStorage();
+  return JSON.parse(fs.readFileSync(submissionsFile, 'utf8'));
+}
+
+function writeSubmissions(items) {
+  ensureStorage();
+  fs.writeFileSync(submissionsFile, JSON.stringify(items, null, 2), 'utf8');
+}
+
+function initializeDatabase() {
+  ensureStorage();
+  return { ok: true };
+}
+
+function saveLocalBusiness(submission) {
+  const items = readSubmissions();
+  const record = {
+    id: Date.now(),
+    name: submission.name,
+    address: submission.address || '',
+    city: submission.city || '',
+    state: submission.state || '',
+    zip: submission.zip || '',
+    category: submission.category || 'local',
+    discount: submission.discount,
+    age_requirement: submission.ageRequirement || null,
+    conditions: submission.conditions || '',
+    submitted_by: submission.submittedBy || 'anonymous',
+    verified: 0,
+    created_at: new Date().toISOString(),
+  };
+
+  items.unshift(record);
+  writeSubmissions(items);
+  return record.id;
+}
+
+function getVerifiedLocalBusinesses(query = '') {
+  const term = String(query || '').trim().toLowerCase();
+  const items = readSubmissions().filter((item) => item.verified === 1);
+
+  if (!term) {
+    return items.slice(0, 25);
+  }
+
+  return items.filter((item) => {
+    const haystack = [item.name, item.category, item.discount, item.conditions]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    return haystack.includes(term);
+  }).slice(0, 25);
+}
+
+module.exports = {
+  initializeDatabase,
+  saveLocalBusiness,
+  getVerifiedLocalBusinesses,
+};

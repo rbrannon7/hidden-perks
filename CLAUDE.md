@@ -1,0 +1,181 @@
+# HiddenPerks — Claude Code Handoff
+
+## What Is This Project?
+
+**HiddenPerks** is a web app that helps senior citizens (55+) quickly find senior discounts at businesses — both national chains and local businesses. The core insight is that most businesses offer senior discounts but never advertise them. Cashiers are trained to apply them only when asked.
+
+The app's key differentiator is the **"Ask For Me"** feature: after finding a discount, the user taps a button and gets a ready-to-show card with the exact words to say (or show on their phone) at the register.
+
+**Tagline:** *"The perks businesses don't advertise."*
+
+---
+
+## Target User
+
+Senior citizens age 55+. UX must prioritize:
+- Large, readable text
+- High contrast
+- Minimal clicks to get to a result
+- No login required to search
+- Mobile-friendly (many users will be on phones in-store)
+
+---
+
+## Core Features (POC Scope)
+
+1. **Search** — by business name or category (e.g., "pizza", "hardware", "grocery")
+2. **Location** — "Near Me" via browser geolocation OR manual ZIP code entry
+3. **Results cards** — show business name, discount description, age requirement, conditions
+4. **Ask For Me button** — generates a plain-English script the user can show, copy, text to themselves, or print
+5. **User submission form** — let users submit a local business discount they've discovered (goes into a pending/review queue)
+
+---
+
+## Data Architecture
+
+### National Chains (Static JSON)
+File: `data/national-chains.json`
+
+Start with manually curated data pulled from SeniorLiving.org and TheSeniorList.com.
+
+Each record:
+```json
+{
+  "id": "dennys-001",
+  "name": "Denny's",
+  "category": "restaurant",
+  "discount": "15% off dine-in and pickup orders",
+  "ageRequirement": 55,
+  "conditions": "No AARP membership required",
+  "sourceUrl": "https://www.theseniorlist.com/senior-discounts/",
+  "national": true
+}
+```
+
+### Local Businesses (Database)
+Use **SQLite** via `better-sqlite3` npm package for POC. One table:
+
+```sql
+CREATE TABLE local_businesses (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  address TEXT,
+  city TEXT,
+  state TEXT,
+  zip TEXT,
+  category TEXT,
+  discount TEXT NOT NULL,
+  age_requirement INTEGER,
+  conditions TEXT,
+  submitted_by TEXT,
+  verified INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+Only `verified = 1` records are shown to users. Rob reviews and approves submissions manually at POC stage.
+
+---
+
+## Tech Stack
+
+| Layer | Choice | Notes |
+|-------|--------|-------|
+| Frontend | Single HTML file or simple React | Keep it simple |
+| Backend | Node.js + Express | Rob's existing stack |
+| Database | SQLite (`better-sqlite3`) | Single `.db` file, no server needed |
+| Geolocation | Browser `navigator.geolocation` | For "Near Me" |
+| Hosting | Render.com | Rob's existing deployment setup |
+| Deploy | GitHub auto-deploy | Rob's existing workflow |
+
+---
+
+## The "Ask For Me" Feature — Detail
+
+When a user taps "Ask For Me" on a result card, generate a card like:
+
+> *"Hi! I'd love to use my senior discount today. I understand [Business Name] offers [discount description] for customers [age requirement]+. Thank you so much!"*
+
+The card should offer three options:
+- **Show** — displays full-screen on the phone for the cashier to read
+- **Copy** — copies text to clipboard
+- **Text to Myself** — opens SMS with pre-filled message (use `sms:` URI)
+
+---
+
+## File Structure (Target)
+
+```
+hiddenperks/
+├── CLAUDE.md               ← this file
+├── package.json
+├── server.js               ← Express backend
+├── database.js             ← SQLite setup and queries
+├── data/
+│   └── national-chains.json
+├── public/
+│   ├── index.html          ← main frontend
+│   ├── style.css
+│   └── app.js
+└── db/
+    └── hiddenperks.db      ← SQLite database file
+```
+
+---
+
+## Design Direction
+
+The landing page mockup was built in a previous Claude chat session. Key design decisions:
+
+- **Color palette:** Deep navy (`#1a1a2e`) + warm gold (`#c9a84c`) + cream background (`#faf7f2`)
+- **Typography:** Playfair Display (display/headings) + Inter (body)
+- **Tone:** Confident, positive — reframes aging as an advantage, not a category
+- **No "senior" stigma** — the brand feels like a smart savings tool, not an old-person app
+
+The landing page HTML file (`agesmart-landing.html`) was built with this palette and can be adapted for HiddenPerks. Note: the app was originally named **AgeSmart** during brainstorming — the final name is **HiddenPerks**.
+
+---
+
+## What to Build First
+
+Suggested order:
+
+1. Set up the project folder and `package.json`
+2. Create `data/national-chains.json` with ~20 seed entries across categories (restaurants, retail, grocery, travel, entertainment)
+3. Build the Express server with two endpoints:
+   - `GET /api/search?q=dennys` — searches national chains JSON
+   - `POST /api/submit` — saves a local business submission (unverified)
+4. Build the frontend search UI with results cards
+5. Wire up the Ask For Me button
+6. Add the submission form
+
+---
+
+## What to Skip at POC Stage
+
+- User accounts or login
+- AI-powered verification of submissions
+- Native mobile app (responsive web is fine)
+- Payment or monetization
+- Ratings or reviews
+
+---
+
+## Rob's Development Context
+
+- **Stack familiarity:** Rob has built Node.js + Express backends before (Aqua Realms card game with WebSocket multiplayer on Render)
+- **Preferred workflow:** Single-file HTML → iterative Claude chat refinement → VS Code + Claude Code → Render deploy via GitHub
+- **New to:** SQLite and JSON databases — keep explanations clear, use comments in code
+- **Editor:** VS Code with Claude Code extension
+- **Hosting:** Render.com with GitHub auto-deploy already configured
+
+---
+
+## Future Feature Ideas (Post-POC)
+
+- Crowdsourced discount submissions with community voting
+- "Discount of the Day" push notification
+- Filter by age bracket (55+, 60+, 65+)
+- AARP vs. non-AARP discount toggle
+- Business owner portal to self-submit and manage their listing
+- Cache County, Utah local focus as a regional pilot (Rob already built a Cache County senior discount web app as a prior project)
