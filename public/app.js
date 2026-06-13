@@ -70,7 +70,7 @@ function renderResults(results) {
           <h3>${esc(item.name)}</h3>
           ${ageBadge}
         </div>
-        <p class="card-tagline">Ask at the register — they won't volunteer this.</p>
+        <p class="card-tagline">Ask for this discount when you make a purchase.</p>
         <div class="detail-box">
           <p class="detail-label"><b>Discount Details</b></p>
           <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
