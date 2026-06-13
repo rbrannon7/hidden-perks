@@ -1,0 +1,18 @@
+{
+  "name": "HiddenPerks",
+  "short_name": "HiddenPerks",
+  "description": "Find hidden senior discounts at local and national businesses — free, no login required.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a0d40",
+  "theme_color": "#1a0d40",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

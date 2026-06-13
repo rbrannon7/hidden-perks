@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const { saveLocalBusiness, getVerifiedLocalBusinesses } = require('./database');
+const { getVerifiedLocalBusinesses } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -50,20 +50,6 @@ app.get('/api/search', (req, res) => {
     query,
     results: [...results.map((r) => ({ ...r, source: 'national' })), ...local],
   });
-});
-
-// POST /api/submit — user submits a local business discount for review
-app.post('/api/submit', (req, res) => {
-  const { name, discount } = req.body;
-  if (!name || !discount) {
-    return res.status(400).json({ error: 'name and discount are required' });
-  }
-  try {
-    const id = saveLocalBusiness(req.body);
-    res.json({ ok: true, id, message: 'Thank you! Your submission has been received and is under review.' });
-  } catch {
-    res.status(500).json({ error: 'Could not save submission' });
-  }
 });
 
 // POST /api/admin/fetch-details — use Claude to extract senior discount info from a restaurant website

@@ -38,26 +38,35 @@ img { max-width: 100%; }
 }
 
 .hero-card {
-  padding: 28px;
-  margin-bottom: 18px;
+  position: relative;
+  padding: 0;
+  margin-bottom: 0;
   text-align: center;
+  overflow: hidden;
+}
+
+.hero-subtitle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-family: 'Baloo 2', 'Trebuchet MS', sans-serif;
+  font-size: clamp(1.2rem, 3.8vw, 1.75rem);
+  font-weight: 900;
+  color: var(--gold);
+  margin: 0;
+  padding: 32px 10% 22px;
+  text-align: center;
+  letter-spacing: 0.12em;
+  background: linear-gradient(transparent 0%, rgba(20, 10, 55, 0.7) 60%, rgba(20, 10, 55, 0.85) 100%);
 }
 
 .hero-image {
   display: block;
-  width: 75%;
-  max-width: 75%;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
   height: auto;
-  max-height: none;
-  object-fit: contain;
-  border-radius: 24px;
-  margin: 0 auto 14px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+  border-radius: 0;
+  filter: hue-rotate(12deg);
 }
 
 .title-row {
@@ -122,10 +131,48 @@ h2 {
 .subtitle {
   font-family: 'Baloo 2', 'Trebuchet MS', sans-serif;
   font-size: clamp(1.08rem, 4vw, 1.45rem);
-  color: var(--mint);
+  color: var(--gold);
   font-weight: 900;
   margin: 0;
   line-height: 1.15;
+}
+
+.hero-badge-row {
+  text-align: center;
+  padding: 12px 0 6px;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: rgba(255, 213, 111, 0.15);
+  border: 1px solid rgba(255, 213, 111, 0.35);
+  color: #ffeaa8;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 7px 22px;
+  letter-spacing: 0.06em;
+}
+
+.category-select {
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 18px;
+  padding: 15px 16px;
+  font: inherit;
+  font-size: 1.15rem;
+  background: rgba(255,255,255,0.06);
+  color: #ffffff;
+  width: 100%;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffd56f' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
+
+.category-select option {
+  background: #2d1a65;
+  color: #ffffff;
 }
 
 .lede,
@@ -161,9 +208,9 @@ h2 {
 input {
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 18px;
-  padding: 15px 16px;
+  padding: 16px 18px;
   font: inherit;
-  font-size: 1.04rem;
+  font-size: 1.15rem;
   background: rgba(255,255,255,0.06);
   color: #ffffff;
 }
@@ -173,10 +220,11 @@ input::placeholder { color: #dfe8f4; }
 button {
   border: none;
   border-radius: 999px;
-  padding: 13px 16px;
+  padding: 16px 20px;
   background: linear-gradient(135deg, #ffd56f, #ff9d5c);
   color: #1a0d40;
   font: inherit;
+  font-size: 1.1rem;
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 10px 22px rgba(255, 213, 111, 0.20);
@@ -223,11 +271,45 @@ button {
   padding: 14px;
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .result-card h3 {
   margin: 0;
-  font-size: 1.18rem;
-  color: #ffffff;
+  font-size: 1.5rem;
+  color: var(--gold);
   font-weight: 900;
+}
+
+.age-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 213, 111, 0.18);
+  border: 1px solid rgba(255, 213, 111, 0.4);
+  color: var(--gold);
+  font-size: 1rem;
+  font-weight: 900;
+  border-radius: 999px;
+  padding: 4px 12px;
+  white-space: nowrap;
+}
+
+.card-tagline {
+  margin: 2px 0 4px;
+  font-size: 0.92rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.last-verified {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  color: var(--mint);
+  font-weight: 600;
 }
 
 .result-tag {
@@ -244,13 +326,13 @@ button {
 .detail-box {
   border: 1px solid rgba(255,255,255,0.10);
   border-radius: 18px;
-  padding: 10px;
+  padding: 14px 16px;
   background: rgba(255,255,255,0.04);
 }
 
-.detail-label {
-  color: var(--mint);
-  font-size: 0.82rem;
+.result-card .detail-label {
+  color: var(--gold);
+  font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-weight: 900;
@@ -259,9 +341,9 @@ button {
 
 .detail-value {
   color: #ffffff;
-  line-height: 1.45;
+  line-height: 1.55;
   margin: 0;
-  font-size: 1.02rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
@@ -269,6 +351,7 @@ button {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .result-actions button {
@@ -282,8 +365,7 @@ button {
   color: #1a0d40;
   font-weight: 900;
   font-size: 1rem;
-  padding: 12px 18px;
-  flex: 2;
+  padding: 12px 32px;
 }
 
 /* ── Ask For Me modal ── */
@@ -438,53 +520,51 @@ button {
   margin: 0;
 }
 
-/* ── Submission form ── */
-.submit-panel {
-  padding: 18px;
+/* ── PWA install banner ── */
+.install-banner:not([hidden]) {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #2d1a65, #1a0d40);
+  border-top: 2px solid rgba(255, 213, 111, 0.4);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 300;
+  flex-wrap: wrap;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.4);
 }
 
-.toggle-submit {
-  background: transparent;
-  color: var(--mint);
-  font-size: 1.05rem;
-  font-weight: 700;
-  padding: 0;
-  box-shadow: none;
-  width: 100%;
-  text-align: left;
-  border-radius: 0;
-}
-
-.submit-section-content {
-  padding-top: 20px;
-}
-
-.submit-section-content h2 {
-  margin-bottom: 6px;
-}
-
-.city-row {
-  display: grid;
-  grid-template-columns: 1fr 60px 90px;
-  gap: 10px;
-}
-
-.city-row label {
-  display: grid;
-  gap: 6px;
-  color: #ffffff;
-  font-weight: 900;
-  font-size: 1.08rem;
-}
-
-.submit-msg {
+.install-text {
+  flex: 1;
   font-size: 1rem;
-  font-weight: 700;
-  padding: 10px 0;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 200px;
 }
 
-.submit-success { color: var(--mint); }
-.submit-error   { color: #ff8a7a; }
+.install-btn {
+  background: linear-gradient(135deg, #ffd56f, #ffb830);
+  color: #1a0d40;
+  font-weight: 900;
+  font-size: 0.95rem;
+  padding: 10px 20px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: none;
+}
+
+.install-dismiss {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+  padding: 8px 12px;
+  border-radius: 50%;
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
 
 @media (max-width: 700px) {
   .page-shell {
@@ -537,10 +617,6 @@ button {
   }
 
   .results-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .city-row {
     grid-template-columns: 1fr;
   }
 

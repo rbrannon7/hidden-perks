@@ -6,6 +6,7 @@ const resultsList = document.getElementById('resultsList');
 const resultCount = document.getElementById('resultCount');
 const searchForm = document.getElementById('searchForm');
 const queryInput = document.getElementById('queryInput');
+const categoryFilter = document.getElementById('categoryFilter');
 const askModal = document.getElementById('askModal');
 const askScript = document.getElementById('askScript');
 const showMode = document.getElementById('showMode');
@@ -20,10 +21,16 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-function buildScript(name, discount, ageReq) {
-  const qualifier = ageReq ? `${ageReq}+` : 'senior';
-  const discountText = discount || 'a senior discount';
-  return `Hi! I'd love to use my senior discount today. I understand ${name} offers ${discountText} for ${qualifier} customers. Thank you so much!`;
+function buildScript(name, discount, ageReq, conditions) {
+  const age = ageReq ? `${ageReq}+` : 'Ask at location';
+  const lines = [
+    `${name} — Senior Discount`,
+    ``,
+    `Discount: ${discount || 'Ask at the register'}`,
+    `Age Required: ${age}`,
+    `Conditions: ${conditions || 'Ask at the register for current terms'}`,
+  ];
+  return lines.join('\n');
 }
 
 // === Render result cards ===
@@ -34,17 +41,24 @@ function renderResults(results) {
     resultsList.innerHTML = `
       <article class="result-card">
         <h3>No results found</h3>
-        <p class="result-meta">Try a chain name like Denny's, IHOP, Starbucks, or Olive Garden.</p>
+        <p class="result-meta">Try a business name like Denny's, Kohl's, CVS, or choose a category above.</p>
       </article>`;
     return;
   }
 
   resultsList.innerHTML = results.map((item) => {
-    const age = item.ageRequirement ? `${item.ageRequirement}+` : 'Ask at location';
     const conditions = item.conditions || 'Ask at the register for current terms';
     const officialUrl = item.sourceUrl
       ? item.sourceUrl
       : `https://www.google.com/search?q=${encodeURIComponent(item.name + ' senior discount')}`;
+
+    const ageBadge = item.ageRequirement
+      ? `<span class="age-badge">${item.ageRequirement}+</span>`
+      : '';
+
+    const verifiedLine = item.lastVerified
+      ? `<p class="last-verified">✓ Verified ${esc(item.lastVerified)}</p>`
+      : '';
 
     const adminBtn = IS_ADMIN
       ? `<button type="button" class="btn-admin-fetch" data-id="${esc(item.id)}" data-url="${esc(item.sourceUrl || '')}" data-name="${esc(item.name)}">↺ Fetch Details</button>`
@@ -52,34 +66,34 @@ function renderResults(results) {
 
     return `
       <article class="result-card" id="card-${esc(item.id)}">
-        <h3>${esc(item.name)}</h3>
-        <p class="result-meta">${esc(item.category || 'restaurant')} · ${item.source === 'national' ? 'National chain' : 'Local'}</p>
+        <div class="card-header">
+          <h3>${esc(item.name)}</h3>
+          ${ageBadge}
+        </div>
+        <p class="card-tagline">Ask at the register — they won't volunteer this.</p>
         <div class="detail-box">
-          <p class="detail-label">1. Discount details</p>
+          <p class="detail-label"><b>Discount Details</b></p>
           <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
         </div>
         <div class="detail-box">
-          <p class="detail-label">2. Age requirement</p>
-          <p class="detail-value">${esc(age)}</p>
-        </div>
-        <div class="detail-box">
-          <p class="detail-label">3. Conditions</p>
+          <p class="detail-label"><b>Conditions</b></p>
           <p class="detail-value">${esc(conditions)}</p>
         </div>
+        ${verifiedLine}
         <div id="admin-preview-${esc(item.id)}" class="admin-preview" hidden></div>
         <div class="result-actions">
           <button type="button" class="btn-ask"
             data-name="${esc(item.name)}"
             data-discount="${esc(item.discount || '')}"
-            data-age="${esc(String(item.ageRequirement || ''))}">Ask For Me</button>
-          <button type="button" onclick="window.open('${esc(officialUrl)}','_blank')">Official Site</button>
+            data-age="${esc(String(item.ageRequirement || ''))}"
+            data-conditions="${esc(conditions)}">Share Discount</button>
           ${adminBtn}
         </div>
       </article>`;
   }).join('');
 
   document.querySelectorAll('.btn-ask').forEach((btn) => {
-    btn.addEventListener('click', () => openAskModal(btn.dataset.name, btn.dataset.discount, btn.dataset.age));
+    btn.addEventListener('click', () => openAskModal(btn.dataset.name, btn.dataset.discount, btn.dataset.age, btn.dataset.conditions));
   });
 
   if (IS_ADMIN) {
@@ -90,8 +104,8 @@ function renderResults(results) {
 }
 
 // === Ask For Me modal ===
-function openAskModal(name, discount, ageReq) {
-  askScript.textContent = buildScript(name, discount, ageReq);
+function openAskModal(name, discount, ageReq, conditions) {
+  askScript.textContent = buildScript(name, discount, ageReq, conditions);
   askModal.hidden = false;
   document.body.style.overflow = 'hidden';
   document.getElementById('closeAsk').focus();
@@ -175,8 +189,11 @@ async function fetchAdminDetails(id, url, name) {
 }
 
 // === Search ===
-function fetchResults(query) {
-  fetch(`/api/search?q=${encodeURIComponent(query)}`)
+function fetchResults(query, category = '') {
+  const params = new URLSearchParams({ q: query });
+  if (category) params.set('category', category);
+
+  fetch(`/api/search?${params}`)
     .then((res) => res.json())
     .then((data) => renderResults(data.results || []))
     .catch(() => {
@@ -190,61 +207,42 @@ function fetchResults(query) {
 
 searchForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  fetchResults(queryInput.value.trim() || 'restaurant');
+  fetchResults(queryInput.value.trim(), categoryFilter.value);
 });
 
-// === Submission form ===
-document.getElementById('toggleSubmit').addEventListener('click', () => {
-  const section = document.getElementById('submitSection');
-  const btn = document.getElementById('toggleSubmit');
-  section.hidden = !section.hidden;
-  btn.textContent = section.hidden
-    ? 'Know a local senior discount? Submit it here ↓'
-    : 'Know a local senior discount? Submit it here ↑';
-});
+// Initial load — show all
+fetchResults('');
 
-document.getElementById('submitForm').addEventListener('submit', async (e) => {
+// PWA install prompt
+let deferredInstall = null;
+const installBanner = document.getElementById('installBanner');
+const installBtn = document.getElementById('installBtn');
+const installDismiss = document.getElementById('installDismiss');
+
+window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
-  const fd = new FormData(e.target);
-  const msg = document.getElementById('submitMsg');
-
-  const payload = {
-    name: (fd.get('name') || '').trim(),
-    discount: (fd.get('discount') || '').trim(),
-    address: (fd.get('address') || '').trim(),
-    city: (fd.get('city') || '').trim(),
-    state: (fd.get('state') || '').trim(),
-    zip: (fd.get('zip') || '').trim(),
-    ageRequirement: parseInt(fd.get('ageRequirement'), 10) || null,
-    conditions: (fd.get('conditions') || '').trim(),
-    submittedBy: (fd.get('submittedBy') || '').trim(),
-    category: 'local',
-  };
-
-  msg.hidden = false;
-  msg.textContent = 'Submitting…';
-  msg.className = 'submit-msg';
-
-  try {
-    const resp = await fetch('/api/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const result = await resp.json();
-    if (result.ok) {
-      msg.textContent = result.message;
-      msg.className = 'submit-msg submit-success';
-      e.target.reset();
-    } else {
-      msg.textContent = result.error || 'Submission failed. Please try again.';
-      msg.className = 'submit-msg submit-error';
-    }
-  } catch {
-    msg.textContent = 'Network error. Please try again.';
-    msg.className = 'submit-msg submit-error';
-  }
+  deferredInstall = e;
+  if (installBanner) installBanner.hidden = false;
 });
 
-// Initial load
-fetchResults('restaurant');
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredInstall) return;
+    deferredInstall.prompt();
+    const { outcome } = await deferredInstall.userChoice;
+    deferredInstall = null;
+    if (installBanner) installBanner.hidden = true;
+  });
+}
+
+if (installDismiss) {
+  installDismiss.addEventListener('click', () => {
+    if (installBanner) installBanner.hidden = true;
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if (installBanner) installBanner.hidden = true;
+  deferredInstall = null;
+});
+
