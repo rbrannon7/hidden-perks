@@ -46,15 +46,27 @@ img { max-width: 100%; }
 }
 
 .hero-subtitle {
+  position: relative;
   font-family: 'Baloo 2', 'Trebuchet MS', sans-serif;
-  font-size: 1.4rem;
+  font-size: 1.65rem;
   font-weight: 900;
   color: var(--gold);
   margin: 0;
-  padding: 18px 10% 22px;
+  padding: 4px 4% 8px;
   text-align: center;
   letter-spacing: 0.12em;
-  background: linear-gradient(145deg, rgba(45, 26, 101, 0.98), rgba(26, 13, 64, 0.98));
+  background: rgba(45, 26, 101, 0.98);
+}
+
+.hero-subtitle::before {
+  content: '';
+  position: absolute;
+  top: -32px;
+  left: 0;
+  right: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, transparent, rgba(45, 26, 101, 0.98));
+  pointer-events: none;
 }
 
 .hero-image {
