@@ -294,7 +294,12 @@ app.get('/api/nearby', async (req, res) => {
       const match = nationalChains.find((chain) => {
         const chainName = normalize(chain.name);
         if (chainName.length < 4) return false;
-        return placeName.includes(chainName) || chainName.includes(placeName);
+        if (placeName.includes(chainName) || chainName.includes(placeName)) return true;
+        // Google often appends a location/screen-count suffix (e.g. "AMC Logan 8", "Cinemark Cache Valley").
+        // Try matching on the first brand word so those still resolve to our chain entry.
+        const brandWord = chainName.split(' ')[0];
+        if (brandWord.length >= 3 && placeName.startsWith(brandWord)) return true;
+        return false;
       });
 
       if (match && !seenChainIds.has(match.id)) {
