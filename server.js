@@ -241,7 +241,6 @@ app.get('/api/nearby', async (req, res) => {
     // Step 2: nearby search with a 20-mile (32 km) radius
     const typeMap = {
       pharmacy: 'pharmacy',
-      retail: 'store',
       travel: 'lodging',
     };
     // For grocery, Google's type=grocery_or_supermarket misses big-box stores (Walmart,
@@ -262,6 +261,21 @@ app.get('/api/nearby', async (req, res) => {
       const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
       const seen = new Set();
       for (const p of [...(d1.results || []), ...(d2.results || [])]) {
+        if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
+      }
+    } else if (category === 'retail') {
+      // Four parallel calls: Google splits retail across many types — type=store alone
+      // misses Kohl's/JCPenney (department_store), Ace/True Value (hardware_store),
+      // Old Navy/Gap/Lane Bryant (clothing_store), etc.
+      const [r1, r2, r3, r4] = await Promise.all([
+        fetch(`${baseUrl}&type=store`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&type=department_store`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&type=hardware_store`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&type=clothing_store`, { signal: AbortSignal.timeout(8000) }),
+      ]);
+      const [d1, d2, d3, d4] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json()]);
+      const seen = new Set();
+      for (const p of [...(d1.results || []), ...(d2.results || []), ...(d3.results || []), ...(d4.results || [])]) {
         if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
       }
     } else if (category === 'grocery') {
