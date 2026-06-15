@@ -238,79 +238,82 @@ app.get('/api/nearby', async (req, res) => {
       return res.json({ ok: true, zip, city: cityName, state: stateCode, lat, lng, results: nearby });
     }
 
-    // Step 2: nearby search with a 20-mile (32 km) radius
-    const typeMap = {
-      pharmacy: 'pharmacy',
-      travel: 'lodging',
-    };
-    // For grocery, Google's type=grocery_or_supermarket misses big-box stores (Walmart,
-    // Sam's Club, Smith's, etc.) so we make two parallel calls and merge by place_id.
-    const googleType = typeMap[category] || '';
+    // Step 2: nearby search
     // Entertainment uses a wider 50-mile radius; all other categories use 20 miles
     const radius = category === 'entertainment' ? 80467 : 32000;
     const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&key=${apiKey}`;
 
+    // Fetch one or more Places URLs in parallel, then automatically fetch the next page
+    // for any call that has more results (Google requires a 2-second delay before next-page).
+    // Returns a deduplicated array of place objects across all calls and pages.
+    async function fetchPlaces(urls) {
+      const seen = new Set();
+      const all = [];
+
+      const merge = (results) => {
+        for (const p of (results || [])) {
+          if (!seen.has(p.place_id)) { seen.add(p.place_id); all.push(p); }
+        }
+      };
+
+      // Page 1 — all URLs in parallel
+      const page1 = await Promise.all(
+        urls.map(u => fetch(u, { signal: AbortSignal.timeout(8000) }).then(r => r.json()).catch(() => ({ results: [] })))
+      );
+      const tokens = [];
+      for (const d of page1) {
+        merge(d.results);
+        if (d.next_page_token) tokens.push(d.next_page_token);
+      }
+
+      // Page 2 — fetch next pages in parallel if any exist (2-second mandatory delay)
+      if (tokens.length > 0) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const page2 = await Promise.all(
+          tokens.map(t =>
+            fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${t}&key=${apiKey}`,
+              { signal: AbortSignal.timeout(8000) }
+            ).then(r => r.json()).catch(() => ({ results: [] }))
+          )
+        );
+        for (const d of page2) merge(d.results);
+      }
+
+      return all;
+    }
+
+    const typeMap = { pharmacy: 'pharmacy', travel: 'lodging' };
+    const googleType = typeMap[category] || '';
+
     let places = [];
     if (category === 'restaurant') {
-      // Two parallel calls: sit-down restaurants + fast food (Google tags fast food as
-      // meal_takeaway, so a single type=restaurant call misses McDonald's, Subway, etc.)
-      const [r1, r2] = await Promise.all([
-        fetch(`${baseUrl}&type=restaurant`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&type=meal_takeaway`, { signal: AbortSignal.timeout(8000) }),
+      places = await fetchPlaces([
+        `${baseUrl}&type=restaurant`,
+        `${baseUrl}&type=meal_takeaway`,
       ]);
-      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
-      const seen = new Set();
-      for (const p of [...(d1.results || []), ...(d2.results || [])]) {
-        if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
-      }
     } else if (category === 'retail') {
-      // Four parallel calls: Google splits retail across many types — type=store alone
-      // misses Kohl's/JCPenney (department_store), Ace/True Value (hardware_store),
-      // Old Navy/Gap/Lane Bryant (clothing_store), etc.
-      const [r1, r2, r3, r4] = await Promise.all([
-        fetch(`${baseUrl}&type=store`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&type=department_store`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&type=hardware_store`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&type=clothing_store`, { signal: AbortSignal.timeout(8000) }),
+      places = await fetchPlaces([
+        `${baseUrl}&type=store`,
+        `${baseUrl}&type=department_store`,
+        `${baseUrl}&type=hardware_store`,
+        `${baseUrl}&type=clothing_store`,
       ]);
-      const [d1, d2, d3, d4] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json()]);
-      const seen = new Set();
-      for (const p of [...(d1.results || []), ...(d2.results || []), ...(d3.results || []), ...(d4.results || [])]) {
-        if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
-      }
     } else if (category === 'grocery') {
-      // Three parallel calls: typed grocery, keyword food/market, and big-box stores
-      // (Walmart/Sam's Club use Google category 'superstore' and don't appear in the others)
-      const [r1, r2, r3] = await Promise.all([
-        fetch(`${baseUrl}&type=grocery_or_supermarket`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&keyword=supermarket+food+market+store`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&keyword=walmart+sams+club`, { signal: AbortSignal.timeout(8000) }),
+      places = await fetchPlaces([
+        `${baseUrl}&type=grocery_or_supermarket`,
+        `${baseUrl}&keyword=supermarket+food+market+store`,
+        `${baseUrl}&keyword=walmart+sams+club`,
       ]);
-      const [d1, d2, d3] = await Promise.all([r1.json(), r2.json(), r3.json()]);
-      const seen = new Set();
-      for (const p of [...(d1.results || []), ...(d2.results || []), ...(d3.results || [])]) {
-        if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
-      }
     } else if (category === 'entertainment') {
-      // Five parallel calls covering movie theaters, bowling, gyms, museums/zoos/aquariums, and hot springs
-      const [r1, r2, r3, r4, r5] = await Promise.all([
-        fetch(`${baseUrl}&type=movie_theater`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&type=bowling_alley`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&type=gym`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&type=museum`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&keyword=hot+springs`, { signal: AbortSignal.timeout(8000) }),
+      places = await fetchPlaces([
+        `${baseUrl}&type=movie_theater`,
+        `${baseUrl}&type=bowling_alley`,
+        `${baseUrl}&type=gym`,
+        `${baseUrl}&type=museum`,
+        `${baseUrl}&keyword=hot+springs`,
       ]);
-      const [d1, d2, d3, d4, d5] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json(), r5.json()]);
-      const seen = new Set();
-      for (const p of [...(d1.results || []), ...(d2.results || []), ...(d3.results || []), ...(d4.results || []), ...(d5.results || [])]) {
-        if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
-      }
     } else {
-      let nearbyUrl = baseUrl;
-      if (googleType) nearbyUrl += `&type=${googleType}`;
-      const nearbyResp = await fetch(nearbyUrl, { signal: AbortSignal.timeout(8000) });
-      const nearbyData = await nearbyResp.json();
-      places = nearbyData.results || [];
+      places = await fetchPlaces([baseUrl + (googleType ? `&type=${googleType}` : '')]);
     }
 
     // Step 3: match each place name against our national chains database
