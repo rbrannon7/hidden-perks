@@ -265,7 +265,8 @@ app.get('/api/nearby', async (req, res) => {
     }
 
     const filtered = category ? results.filter((r) => r.category === category) : results;
-    res.json({ ok: true, zip, city: cityName, lat, lng, results: filtered });
+    const debug_place_names = places.map((p) => p.name);
+    res.json({ ok: true, zip, city: cityName, lat, lng, results: filtered, debug_place_names });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
