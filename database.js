@@ -74,8 +74,32 @@ function getVerifiedLocalBusinesses(query = '', zip = '') {
   }).slice(0, 50).map((r) => ({ ...r, source: 'local' }));
 }
 
+function getAllSubmissions() {
+  return readSubmissions();
+}
+
+function approveSubmission(id) {
+  const items = readSubmissions();
+  const idx = items.findIndex((item) => String(item.id) === String(id));
+  if (idx === -1) return false;
+  items[idx].verified = 1;
+  writeSubmissions(items);
+  return true;
+}
+
+function rejectSubmission(id) {
+  const items = readSubmissions();
+  const filtered = items.filter((item) => String(item.id) !== String(id));
+  if (filtered.length === items.length) return false;
+  writeSubmissions(filtered);
+  return true;
+}
+
 module.exports = {
   initializeDatabase,
   saveLocalBusiness,
   getVerifiedLocalBusinesses,
+  getAllSubmissions,
+  approveSubmission,
+  rejectSubmission,
 };

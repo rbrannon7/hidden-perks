@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const { getVerifiedLocalBusinesses, saveLocalBusiness } = require('./database');
+const { getVerifiedLocalBusinesses, saveLocalBusiness, getAllSubmissions, approveSubmission, rejectSubmission } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -142,6 +142,132 @@ app.post('/api/admin/fetch-details', async (req, res) => {
     res.json({ ok: true, businessId, extracted, sourceUrl: url || '' });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// === Admin helper ===
+function requireAdmin(req, res) {
+  const pw = req.headers['x-admin-password'];
+  const configured = process.env.ADMIN_PASSWORD;
+  if (!configured) {
+    res.status(503).json({ ok: false, error: 'ADMIN_PASSWORD environment variable is not set on this server.' });
+    return false;
+  }
+  if (pw !== configured) {
+    res.status(401).json({ ok: false, error: 'Incorrect password.' });
+    return false;
+  }
+  return true;
+}
+
+// GET /api/admin/submissions
+app.get('/api/admin/submissions', (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  res.json({ ok: true, submissions: getAllSubmissions() });
+});
+
+// POST /api/admin/approve/:id
+app.post('/api/admin/approve/:id', (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const ok = approveSubmission(req.params.id);
+  if (!ok) return res.status(404).json({ ok: false, error: 'Submission not found.' });
+  res.json({ ok: true });
+});
+
+// POST /api/admin/reject/:id
+app.post('/api/admin/reject/:id', (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const ok = rejectSubmission(req.params.id);
+  if (!ok) return res.status(404).json({ ok: false, error: 'Submission not found.' });
+  res.json({ ok: true });
+});
+
+// GET /api/nearby?zip=84321&category=restaurant
+// Requires GOOGLE_PLACES_API_KEY environment variable — returns 503 until configured.
+app.get('/api/nearby', async (req, res) => {
+  const zip = (req.query.zip || '').replace(/\D/g, '').slice(0, 5);
+  const category = req.query.category || '';
+
+  if (!zip || zip.length < 5) {
+    return res.status(400).json({ ok: false, error: 'Enter a valid 5-digit ZIP code.' });
+  }
+
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) {
+    return res.status(503).json({ ok: false, configured: false, error: 'Google Places not configured yet.' });
+  }
+
+  try {
+    // Step 1: geocode ZIP to lat/lng
+    const geoResp = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${zip}&components=postal_code:${zip}|country:US&key=${apiKey}`,
+      { signal: AbortSignal.timeout(8000) }
+    );
+    const geoData = await geoResp.json();
+
+    if (!geoData.results?.length) {
+      return res.status(404).json({ ok: false, error: `ZIP code ${zip} not found.` });
+    }
+
+    const { lat, lng } = geoData.results[0].geometry.location;
+    const cityComp = geoData.results[0].address_components?.find((c) => c.types.includes('locality'));
+    const cityName = cityComp?.long_name || '';
+
+    // Step 2: nearby search with a 10-mile (16 km) radius
+    const typeMap = {
+      restaurant: 'restaurant',
+      grocery: 'grocery_or_supermarket',
+      pharmacy: 'pharmacy',
+      retail: 'store',
+      entertainment: 'movie_theater',
+      travel: 'lodging',
+    };
+    const googleType = typeMap[category] || '';
+
+    let nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=16000&key=${apiKey}`;
+    if (googleType) nearbyUrl += `&type=${googleType}`;
+
+    const nearbyResp = await fetch(nearbyUrl, { signal: AbortSignal.timeout(8000) });
+    const nearbyData = await nearbyResp.json();
+    const places = nearbyData.results || [];
+
+    // Step 3: match each place name against our national chains database
+    const results = [];
+    const seenChainIds = new Set();
+
+    for (const place of places) {
+      const placeName = normalize(place.name);
+      const match = nationalChains.find((chain) => {
+        const chainName = normalize(chain.name);
+        if (chainName.length < 4) return false;
+        return placeName.includes(chainName) || chainName.includes(placeName);
+      });
+
+      if (match && !seenChainIds.has(match.id)) {
+        seenChainIds.add(match.id);
+        results.push({
+          id: `nearby-${place.place_id}`,
+          nationalId: match.id,
+          name: place.name,
+          address: place.vicinity,
+          category: match.category,
+          discount: match.discount,
+          ageRequirement: match.ageRequirement,
+          conditions: match.conditions,
+          sourceUrl: match.sourceUrl,
+          lastVerified: match.lastVerified,
+          national: true,
+          source: 'nearby',
+          nearZip: zip,
+          nearCity: cityName,
+        });
+      }
+    }
+
+    const filtered = category ? results.filter((r) => r.category === category) : results;
+    res.json({ ok: true, zip, city: cityName, lat, lng, results: filtered });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 

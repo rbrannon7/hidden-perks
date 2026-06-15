@@ -61,7 +61,9 @@ function renderResults(results) {
 
     const localBadge = item.source === 'local'
       ? `<span class="local-badge">Local</span>`
-      : '';
+      : item.source === 'nearby'
+        ? `<span class="nearby-badge">📍 Near You</span>`
+        : '';
 
     const verifiedLine = item.lastVerified
       ? `<p class="last-verified">✓ Verified ${esc(item.lastVerified)}</p>`
@@ -78,7 +80,7 @@ function renderResults(results) {
           ${ageBadge}
           ${localBadge}
         </div>
-        <p class="card-tagline">Ask for this discount when you make a purchase.</p>
+        ${item.address ? `<p class="card-address">📍 ${esc(item.address)}</p>` : `<p class="card-tagline">Ask for this discount when you make a purchase.</p>`}
         <div class="detail-box">
           <p class="detail-label"><b>Discount Details</b></p>
           <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
@@ -202,9 +204,29 @@ function fetchResults(query, category = '', zip = '') {
   if (category) params.set('category', category);
   if (zip) params.set('zip', zip);
 
-  fetch(`/api/search?${params}`)
-    .then((res) => res.json())
-    .then((data) => renderResults(data.results || []))
+  const baseSearch = fetch(`/api/search?${params}`)
+    .then((r) => r.json())
+    .catch(() => ({ results: [] }));
+
+  const nearbySearch = zip.length === 5
+    ? fetch(`/api/nearby?${new URLSearchParams({ zip, ...(category && { category }) })}`)
+        .then((r) => r.json())
+        .catch(() => null)
+    : Promise.resolve(null);
+
+  Promise.all([baseSearch, nearbySearch])
+    .then(([searchData, nearbyData]) => {
+      let results = searchData.results || [];
+
+      if (nearbyData?.ok && nearbyData.results?.length) {
+        // Remove generic national entries already represented by a specific nearby location
+        const nearbyNationalIds = new Set(nearbyData.results.map((r) => r.nationalId));
+        const filteredNational = results.filter((r) => !nearbyNationalIds.has(r.id));
+        results = [...nearbyData.results, ...filteredNational];
+      }
+
+      renderResults(results);
+    })
     .catch(() => {
       resultsList.innerHTML = `
         <article class="result-card">

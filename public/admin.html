@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HiddenPerks Admin</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Baloo+2:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #1a0d40;
+        --panel: #2d1a65;
+        --card: #3a2472;
+        --text: #f7fbff;
+        --muted: #d9e5f3;
+        --border: rgba(255, 255, 255, 0.12);
+        --gold: #ffd56f;
+        --mint: #66e2cf;
+        --red: #ff6b6b;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: 'Inter', Arial, sans-serif;
+        color: var(--text);
+        min-height: 100vh;
+        padding: 28px 16px 64px;
+        background:
+          radial-gradient(circle at top, rgba(160, 100, 255, 0.12), transparent 22%),
+          linear-gradient(145deg, #1a0d40 0%, #2d1a65 45%, #160a38 100%);
+      }
+
+      .shell {
+        width: min(880px, calc(100vw - 24px));
+        margin: 0 auto;
+      }
+
+      .page-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+      }
+
+      h1 {
+        font-family: 'Baloo 2', sans-serif;
+        color: var(--gold);
+        font-size: 2.2rem;
+        margin: 0 0 4px;
+        line-height: 1;
+      }
+
+      .page-subtitle {
+        color: var(--muted);
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      /* ── Gate ── */
+      .gate {
+        background: linear-gradient(145deg, rgba(45, 26, 101, 0.98), rgba(26, 13, 64, 0.98));
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 28px;
+        max-width: 400px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .gate h2 {
+        font-family: 'Baloo 2', sans-serif;
+        color: var(--gold);
+        font-size: 1.5rem;
+        margin: 0;
+      }
+
+      .gate p {
+        color: var(--muted);
+        margin: 0;
+        font-size: 0.97rem;
+      }
+
+      input[type="password"] {
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 14px;
+        padding: 14px 16px;
+        font: inherit;
+        font-size: 1.05rem;
+        background: rgba(255, 255, 255, 0.06);
+        color: #fff;
+        width: 100%;
+      }
+
+      input[type="password"]::placeholder { color: #9ab0cc; }
+
+      .btn {
+        border: none;
+        border-radius: 999px;
+        padding: 14px 24px;
+        font: inherit;
+        font-size: 1rem;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #ffd56f, #ff9d5c);
+        color: #1a0d40;
+      }
+
+      .btn-logout {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--muted);
+        font-size: 0.88rem;
+        padding: 10px 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .btn-approve {
+        background: linear-gradient(135deg, #66e2cf, #3db9a8);
+        color: #1a0d40;
+        font-weight: 900;
+        padding: 10px 18px;
+        font-size: 0.9rem;
+      }
+
+      .btn-reject {
+        background: rgba(255, 100, 100, 0.12);
+        border: 1px solid rgba(255, 100, 100, 0.3);
+        color: var(--red);
+        font-weight: 700;
+        padding: 10px 18px;
+        font-size: 0.9rem;
+      }
+
+      .error-msg {
+        color: #ff8a7a;
+        font-size: 0.92rem;
+        font-weight: 600;
+      }
+
+      /* ── Dashboard ── */
+      .tab-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .tab-btn {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--muted);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+        padding: 10px 20px;
+        font: inherit;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .tab-btn.active {
+        background: rgba(255, 213, 111, 0.15);
+        color: var(--gold);
+        border-color: rgba(255, 213, 111, 0.3);
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 213, 111, 0.14);
+        color: var(--gold);
+        font-size: 0.85rem;
+        font-weight: 900;
+        border-radius: 999px;
+        padding: 4px 12px;
+        margin-left: 6px;
+      }
+
+      /* ── Submission card ── */
+      .submission-card {
+        background: linear-gradient(145deg, #3e2880, #2d1a65);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 18px 20px;
+        margin-bottom: 12px;
+        transition: opacity 0.25s;
+      }
+
+      .submission-card.fading { opacity: 0; }
+
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 14px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .card-name {
+        font-size: 1.35rem;
+        font-weight: 900;
+        color: var(--gold);
+        margin: 0 0 4px;
+      }
+
+      .card-meta {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin: 0;
+        line-height: 1.5;
+      }
+
+      .card-actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+        align-items: center;
+      }
+
+      .approved-label {
+        color: var(--mint);
+        font-weight: 900;
+        font-size: 0.9rem;
+      }
+
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 8px;
+      }
+
+      .detail-item {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 10px 14px;
+      }
+
+      .detail-label {
+        color: var(--gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 4px;
+      }
+
+      .detail-value {
+        color: #fff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: var(--muted);
+        font-size: 1.05rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+      }
+
+      @media (max-width: 600px) {
+        .card-top { flex-direction: column; }
+        .card-actions { width: 100%; justify-content: flex-end; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="page-top">
+        <div>
+          <h1>HiddenPerks Admin</h1>
+          <p class="page-subtitle">Review and approve community-submitted local business discounts.</p>
+        </div>
+        <button class="btn btn-logout" id="logoutBtn" style="display:none" onclick="logout()">Log Out</button>
+      </div>
+
+      <!-- Password gate -->
+      <div class="gate" id="gate">
+        <h2>Admin Login</h2>
+        <p>Enter your admin password to continue.</p>
+        <input type="password" id="pwInput" placeholder="Password" autocomplete="current-password" />
+        <div id="gateError" class="error-msg" style="display:none"></div>
+        <button class="btn btn-primary" onclick="login()">Sign In</button>
+      </div>
+
+      <!-- Dashboard -->
+      <div id="dashboard" style="display:none">
+        <div class="tab-row">
+          <button class="tab-btn active" id="tabPending" onclick="showTab('pending')">
+            Pending Review <span class="pill" id="pendingCount">0</span>
+          </button>
+          <button class="tab-btn" id="tabApproved" onclick="showTab('approved')">
+            Approved <span class="pill" id="approvedCount">0</span>
+          </button>
+        </div>
+        <div id="submissionsContainer"></div>
+      </div>
+    </div>
+
+    <script>
+      let allSubmissions = [];
+      let activeTab = 'pending';
+
+      function esc(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function getPassword() { return sessionStorage.getItem('hp_admin_pw') || ''; }
+
+      function login() {
+        const pw = document.getElementById('pwInput').value.trim();
+        if (!pw) return;
+        sessionStorage.setItem('hp_admin_pw', pw);
+        document.getElementById('gateError').style.display = 'none';
+        loadSubmissions();
+      }
+
+      function logout() {
+        sessionStorage.removeItem('hp_admin_pw');
+        document.getElementById('gate').style.display = 'grid';
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('pwInput').value = '';
+      }
+
+      document.getElementById('pwInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') login();
+      });
+
+      async function loadSubmissions() {
+        try {
+          const res = await fetch('/api/admin/submissions', {
+            headers: { 'x-admin-password': getPassword() },
+          });
+          const data = await res.json();
+
+          if (!data.ok) {
+            sessionStorage.removeItem('hp_admin_pw');
+            document.getElementById('gateError').textContent = data.error;
+            document.getElementById('gateError').style.display = 'block';
+            return;
+          }
+
+          allSubmissions = data.submissions;
+          document.getElementById('gate').style.display = 'none';
+          document.getElementById('dashboard').style.display = 'block';
+          document.getElementById('logoutBtn').style.display = 'inline-block';
+          updateCounts();
+          renderSubmissions();
+        } catch {
+          document.getElementById('gateError').textContent = 'Network error — is the server running?';
+          document.getElementById('gateError').style.display = 'block';
+        }
+      }
+
+      function updateCounts() {
+        document.getElementById('pendingCount').textContent = allSubmissions.filter((s) => s.verified === 0).length;
+        document.getElementById('approvedCount').textContent = allSubmissions.filter((s) => s.verified === 1).length;
+      }
+
+      function showTab(tab) {
+        activeTab = tab;
+        document.getElementById('tabPending').className = 'tab-btn' + (tab === 'pending' ? ' active' : '');
+        document.getElementById('tabApproved').className = 'tab-btn' + (tab === 'approved' ? ' active' : '');
+        renderSubmissions();
+      }
+
+      function renderSubmissions() {
+        const container = document.getElementById('submissionsContainer');
+        const list = allSubmissions.filter((s) =>
+          activeTab === 'pending' ? s.verified === 0 : s.verified === 1
+        );
+
+        if (!list.length) {
+          container.innerHTML = `<div class="empty-state">${
+            activeTab === 'pending'
+              ? 'No pending submissions — all caught up!'
+              : 'No approved local businesses yet.'
+          }</div>`;
+          return;
+        }
+
+        container.innerHTML = list.map((s) => {
+          const date = s.created_at ? new Date(s.created_at).toLocaleDateString() : '—';
+          const location = [s.city, s.state, s.zip].filter(Boolean).join(', ') || 'Location not provided';
+          return `
+            <div class="submission-card" id="card-${s.id}">
+              <div class="card-top">
+                <div>
+                  <h3 class="card-name">${esc(s.name)}</h3>
+                  <p class="card-meta">
+                    ${esc(location)} &bull; ${esc(s.category || 'local')} &bull; Submitted ${esc(date)}
+                    ${s.submitted_by ? ' by ' + esc(s.submitted_by) : ''}
+                  </p>
+                </div>
+                <div class="card-actions">
+                  ${s.verified === 0
+                    ? `<button class="btn btn-approve" onclick="approve(${s.id})">✓ Approve</button>
+                       <button class="btn btn-reject" onclick="reject(${s.id})">✕ Delete</button>`
+                    : `<span class="approved-label">✓ Approved</span>`
+                  }
+                </div>
+              </div>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <div class="detail-label">Discount</div>
+                  <div class="detail-value">${esc(s.discount)}</div>
+                </div>
+                ${s.age_requirement ? `
+                <div class="detail-item">
+                  <div class="detail-label">Age Requirement</div>
+                  <div class="detail-value">${esc(s.age_requirement)}+</div>
+                </div>` : ''}
+                ${s.conditions ? `
+                <div class="detail-item">
+                  <div class="detail-label">Conditions</div>
+                  <div class="detail-value">${esc(s.conditions)}</div>
+                </div>` : ''}
+                ${s.address ? `
+                <div class="detail-item">
+                  <div class="detail-label">Address</div>
+                  <div class="detail-value">${esc(s.address)}</div>
+                </div>` : ''}
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      async function approve(id) {
+        const res = await fetch(`/api/admin/approve/${id}`, {
+          method: 'POST',
+          headers: { 'x-admin-password': getPassword(), 'Content-Type': 'application/json' },
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const s = allSubmissions.find((s) => s.id === id);
+          if (s) s.verified = 1;
+          updateCounts();
+          const card = document.getElementById(`card-${id}`);
+          if (card) { card.classList.add('fading'); setTimeout(() => renderSubmissions(), 280); }
+        }
+      }
+
+      async function reject(id) {
+        if (!confirm('Permanently delete this submission?')) return;
+        const res = await fetch(`/api/admin/reject/${id}`, {
+          method: 'POST',
+          headers: { 'x-admin-password': getPassword(), 'Content-Type': 'application/json' },
+        });
+        const data = await res.json();
+        if (data.ok) {
+          allSubmissions = allSubmissions.filter((s) => s.id !== id);
+          updateCounts();
+          const card = document.getElementById(`card-${id}`);
+          if (card) { card.classList.add('fading'); setTimeout(() => renderSubmissions(), 280); }
+        }
+      }
+
+      // Auto-login if a stored password exists from a previous session
+      if (getPassword()) loadSubmissions();
+    </script>
+  </body>
+</html>
