@@ -224,7 +224,7 @@ app.get('/api/nearby', async (req, res) => {
     };
     const googleType = typeMap[category] || '';
 
-    let nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=16000&key=${apiKey}`;
+    let nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=32000&key=${apiKey}`;
     if (googleType) nearbyUrl += `&type=${googleType}`;
 
     const nearbyResp = await fetch(nearbyUrl, { signal: AbortSignal.timeout(8000) });
