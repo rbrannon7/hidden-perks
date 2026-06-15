@@ -213,23 +213,37 @@ app.get('/api/nearby', async (req, res) => {
     const cityComp = geoData.results[0].address_components?.find((c) => c.types.includes('locality'));
     const cityName = cityComp?.long_name || '';
 
-    // Step 2: nearby search with a 10-mile (16 km) radius
+    // Step 2: nearby search with a 20-mile (32 km) radius
     const typeMap = {
       restaurant: 'restaurant',
-      grocery: 'grocery_or_supermarket',
       pharmacy: 'pharmacy',
       retail: 'store',
       entertainment: 'movie_theater',
       travel: 'lodging',
     };
+    // For grocery, Google's type=grocery_or_supermarket misses big-box stores (Walmart,
+    // Sam's Club, Smith's, etc.) so we make two parallel calls and merge by place_id.
     const googleType = typeMap[category] || '';
+    const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=32000&key=${apiKey}`;
 
-    let nearbyUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=32000&key=${apiKey}`;
-    if (googleType) nearbyUrl += `&type=${googleType}`;
-
-    const nearbyResp = await fetch(nearbyUrl, { signal: AbortSignal.timeout(8000) });
-    const nearbyData = await nearbyResp.json();
-    const places = nearbyData.results || [];
+    let places = [];
+    if (category === 'grocery') {
+      const [r1, r2] = await Promise.all([
+        fetch(`${baseUrl}&type=grocery_or_supermarket`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&keyword=walmart+target+sams+club+grocery+food+supermarket`, { signal: AbortSignal.timeout(8000) }),
+      ]);
+      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+      const seen = new Set();
+      for (const p of [...(d1.results || []), ...(d2.results || [])]) {
+        if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
+      }
+    } else {
+      let nearbyUrl = baseUrl;
+      if (googleType) nearbyUrl += `&type=${googleType}`;
+      const nearbyResp = await fetch(nearbyUrl, { signal: AbortSignal.timeout(8000) });
+      const nearbyData = await nearbyResp.json();
+      places = nearbyData.results || [];
+    }
 
     // Step 3: match each place name against our national chains database
     const results = [];
