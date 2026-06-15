@@ -248,7 +248,9 @@ app.get('/api/nearby', async (req, res) => {
     // For grocery, Google's type=grocery_or_supermarket misses big-box stores (Walmart,
     // Sam's Club, Smith's, etc.) so we make two parallel calls and merge by place_id.
     const googleType = typeMap[category] || '';
-    const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=32000&key=${apiKey}`;
+    // Entertainment uses a wider 50-mile radius; all other categories use 20 miles
+    const radius = category === 'entertainment' ? 80467 : 32000;
+    const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&key=${apiKey}`;
 
     let places = [];
     if (category === 'grocery') {
@@ -265,16 +267,17 @@ app.get('/api/nearby', async (req, res) => {
         if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
       }
     } else if (category === 'entertainment') {
-      // Three parallel calls: movie theaters, bowling alleys, and gyms/fitness centers
-      // Google type=movie_theater alone misses Bowlero, Brunswick Zone, YMCA, Planet Fitness, etc.
-      const [r1, r2, r3] = await Promise.all([
+      // Five parallel calls covering movie theaters, bowling, gyms, museums/zoos/aquariums, and hot springs
+      const [r1, r2, r3, r4, r5] = await Promise.all([
         fetch(`${baseUrl}&type=movie_theater`, { signal: AbortSignal.timeout(8000) }),
         fetch(`${baseUrl}&type=bowling_alley`, { signal: AbortSignal.timeout(8000) }),
         fetch(`${baseUrl}&type=gym`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&type=museum`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&keyword=hot+springs`, { signal: AbortSignal.timeout(8000) }),
       ]);
-      const [d1, d2, d3] = await Promise.all([r1.json(), r2.json(), r3.json()]);
+      const [d1, d2, d3, d4, d5] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json(), r5.json()]);
       const seen = new Set();
-      for (const p of [...(d1.results || []), ...(d2.results || []), ...(d3.results || [])]) {
+      for (const p of [...(d1.results || []), ...(d2.results || []), ...(d3.results || []), ...(d4.results || []), ...(d5.results || [])]) {
         if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
       }
     } else {
