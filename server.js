@@ -230,7 +230,7 @@ app.get('/api/nearby', async (req, res) => {
     if (category === 'grocery') {
       const [r1, r2] = await Promise.all([
         fetch(`${baseUrl}&type=grocery_or_supermarket`, { signal: AbortSignal.timeout(8000) }),
-        fetch(`${baseUrl}&keyword=walmart+target+sams+club+grocery+food+supermarket`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&keyword=supermarket+food+market+store`, { signal: AbortSignal.timeout(8000) }),
       ]);
       const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
       const seen = new Set();
