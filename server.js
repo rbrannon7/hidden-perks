@@ -240,7 +240,6 @@ app.get('/api/nearby', async (req, res) => {
 
     // Step 2: nearby search with a 20-mile (32 km) radius
     const typeMap = {
-      restaurant: 'restaurant',
       pharmacy: 'pharmacy',
       retail: 'store',
       travel: 'lodging',
@@ -253,7 +252,19 @@ app.get('/api/nearby', async (req, res) => {
     const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&key=${apiKey}`;
 
     let places = [];
-    if (category === 'grocery') {
+    if (category === 'restaurant') {
+      // Two parallel calls: sit-down restaurants + fast food (Google tags fast food as
+      // meal_takeaway, so a single type=restaurant call misses McDonald's, Subway, etc.)
+      const [r1, r2] = await Promise.all([
+        fetch(`${baseUrl}&type=restaurant`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&type=meal_takeaway`, { signal: AbortSignal.timeout(8000) }),
+      ]);
+      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+      const seen = new Set();
+      for (const p of [...(d1.results || []), ...(d2.results || [])]) {
+        if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
+      }
+    } else if (category === 'grocery') {
       // Three parallel calls: typed grocery, keyword food/market, and big-box stores
       // (Walmart/Sam's Club use Google category 'superstore' and don't appear in the others)
       const [r1, r2, r3] = await Promise.all([
