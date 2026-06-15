@@ -37,8 +37,21 @@ function buildScript(name, discount, ageReq, conditions) {
 }
 
 // === Render result cards ===
-function renderResults(results) {
+function renderResults(results, locationLabel = '') {
   resultCount.textContent = `${results.length} result${results.length === 1 ? '' : 's'}`;
+
+  const banner = document.getElementById('locationBanner');
+  if (banner) {
+    if (locationLabel) {
+      banner.textContent = locationLabel;
+      banner.hidden = false;
+      banner.className = locationLabel.startsWith('📍')
+        ? 'location-banner location-banner--found'
+        : 'location-banner location-banner--fallback';
+    } else {
+      banner.hidden = true;
+    }
+  }
 
   if (!results.length) {
     resultsList.innerHTML = `
@@ -217,15 +230,20 @@ function fetchResults(query, category = '', zip = '') {
   Promise.all([baseSearch, nearbySearch])
     .then(([searchData, nearbyData]) => {
       let results = searchData.results || [];
+      let locationLabel = '';
 
       if (nearbyData?.ok && nearbyData.results?.length) {
-        // Remove generic national entries already represented by a specific nearby location
-        const nearbyNationalIds = new Set(nearbyData.results.map((r) => r.nationalId));
-        const filteredNational = results.filter((r) => !nearbyNationalIds.has(r.id));
-        results = [...nearbyData.results, ...filteredNational];
+        // ZIP search worked — show only nearby locations + local submissions for that ZIP
+        const localResults = results.filter((r) => r.source === 'local');
+        results = [...nearbyData.results, ...localResults];
+        const city = nearbyData.city ? `${nearbyData.city} ` : '';
+        locationLabel = `📍 Showing locations near ${city}ZIP ${nearbyData.zip}`;
+      } else if (zip.length === 5) {
+        // ZIP entered but Places API unavailable or no matches — show all national chains
+        locationLabel = `Showing all national chains — location search unavailable for ZIP ${zip}`;
       }
 
-      renderResults(results);
+      renderResults(results, locationLabel);
     })
     .catch(() => {
       resultsList.innerHTML = `

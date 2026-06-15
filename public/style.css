@@ -574,6 +574,27 @@ button {
   flex-shrink: 0;
 }
 
+/* ── Location banner ── */
+.location-banner {
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-size: 0.97rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.location-banner--found {
+  background: rgba(102, 226, 207, 0.12);
+  border: 1px solid rgba(102, 226, 207, 0.35);
+  color: var(--mint);
+}
+
+.location-banner--fallback {
+  background: rgba(255, 213, 111, 0.08);
+  border: 1px solid rgba(255, 213, 111, 0.2);
+  color: var(--muted);
+}
+
 /* ── ZIP code row ── */
 .zip-row {
   display: flex;
