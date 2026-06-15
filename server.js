@@ -228,13 +228,16 @@ app.get('/api/nearby', async (req, res) => {
 
     let places = [];
     if (category === 'grocery') {
-      const [r1, r2] = await Promise.all([
+      // Three parallel calls: typed grocery, keyword food/market, and big-box stores
+      // (Walmart/Sam's Club use Google category 'superstore' and don't appear in the others)
+      const [r1, r2, r3] = await Promise.all([
         fetch(`${baseUrl}&type=grocery_or_supermarket`, { signal: AbortSignal.timeout(8000) }),
         fetch(`${baseUrl}&keyword=supermarket+food+market+store`, { signal: AbortSignal.timeout(8000) }),
+        fetch(`${baseUrl}&keyword=walmart+sams+club`, { signal: AbortSignal.timeout(8000) }),
       ]);
-      const [d1, d2] = await Promise.all([r1.json(), r2.json()]);
+      const [d1, d2, d3] = await Promise.all([r1.json(), r2.json(), r3.json()]);
       const seen = new Set();
-      for (const p of [...(d1.results || []), ...(d2.results || [])]) {
+      for (const p of [...(d1.results || []), ...(d2.results || []), ...(d3.results || [])]) {
         if (!seen.has(p.place_id)) { seen.add(p.place_id); places.push(p); }
       }
     } else {
