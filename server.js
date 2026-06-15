@@ -264,9 +264,9 @@ app.get('/api/nearby', async (req, res) => {
       }
     }
 
-    const filtered = category ? results.filter((r) => r.category === category) : results;
+    // Google already filtered by type; don't re-filter by our internal category
     const debug_place_names = places.map((p) => p.name);
-    res.json({ ok: true, zip, city: cityName, lat, lng, results: filtered, debug_place_names });
+    res.json({ ok: true, zip, city: cityName, lat, lng, results, debug_place_names });
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
