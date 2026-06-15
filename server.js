@@ -15,6 +15,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 const nationalChainsPath = path.join(__dirname, 'data', 'national-chains.json');
 const nationalChains = JSON.parse(fs.readFileSync(nationalChainsPath, 'utf8'));
 
+const parksPath = path.join(__dirname, 'data', 'parks.json');
+const allParks = JSON.parse(fs.readFileSync(parksPath, 'utf8'));
+const nationalParks = allParks.filter((p) => p.subcategory === 'national');
+const stateParks = allParks.filter((p) => p.subcategory === 'state');
+
 function normalize(value) {
   return String(value || '')
     .toLowerCase()
@@ -40,6 +45,15 @@ app.get('/api/search', (req, res) => {
   const query = req.query.q || '';
   const category = req.query.category || '';
   const zip = (req.query.zip || '').replace(/\D/g, '').slice(0, 5);
+
+  // Parks category: always return all national parks from parks.json
+  if (category === 'parks') {
+    return res.json({
+      query,
+      zip,
+      results: nationalParks.map((p) => ({ ...p, source: 'national' })),
+    });
+  }
 
   let results = searchNationalChains(query);
   if (category) {
@@ -198,7 +212,7 @@ app.get('/api/nearby', async (req, res) => {
   }
 
   try {
-    // Step 1: geocode ZIP to lat/lng
+    // Step 1: geocode ZIP to lat/lng (and state for parks)
     const geoResp = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?address=${zip}&components=postal_code:${zip}|country:US&key=${apiKey}`,
       { signal: AbortSignal.timeout(8000) }
@@ -210,8 +224,19 @@ app.get('/api/nearby', async (req, res) => {
     }
 
     const { lat, lng } = geoData.results[0].geometry.location;
-    const cityComp = geoData.results[0].address_components?.find((c) => c.types.includes('locality'));
+    const addrComps = geoData.results[0].address_components || [];
+    const cityComp = addrComps.find((c) => c.types.includes('locality'));
     const cityName = cityComp?.long_name || '';
+    const stateComp = addrComps.find((c) => c.types.includes('administrative_area_level_1'));
+    const stateCode = stateComp?.short_name || '';
+
+    // Parks: skip Google Places entirely; filter parks.json by state
+    if (category === 'parks') {
+      const nearby = stateParks
+        .filter((p) => p.state === stateCode)
+        .map((p) => ({ ...p, source: 'nearby', nearZip: zip, nearCity: cityName, nearState: stateCode }));
+      return res.json({ ok: true, zip, city: cityName, state: stateCode, lat, lng, results: nearby });
+    }
 
     // Step 2: nearby search with a 20-mile (32 km) radius
     const typeMap = {

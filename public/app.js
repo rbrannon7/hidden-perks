@@ -74,9 +74,13 @@ function renderResults(results, locationLabel = '') {
 
     const localBadge = item.source === 'local'
       ? `<span class="local-badge">Local</span>`
-      : item.source === 'nearby'
-        ? `<span class="nearby-badge">📍 Near You</span>`
-        : '';
+      : item.subcategory === 'national' && item.category === 'parks'
+        ? `<span class="national-park-badge">🏔️ National Park</span>`
+        : item.subcategory === 'state' && item.category === 'parks'
+          ? `<span class="state-park-badge">🌲 State Park</span>`
+          : item.source === 'nearby'
+            ? `<span class="nearby-badge">📍 Near You</span>`
+            : '';
 
     const verifiedLine = item.lastVerified
       ? `<p class="last-verified">✓ Verified ${esc(item.lastVerified)}</p>`
@@ -233,14 +237,25 @@ function fetchResults(query, category = '', zip = '') {
       let locationLabel = '';
 
       if (nearbyData?.ok && nearbyData.results?.length) {
-        // ZIP search worked — show only nearby locations + local submissions for that ZIP
-        const localResults = results.filter((r) => r.source === 'local');
-        results = [...nearbyData.results, ...localResults];
-        const city = nearbyData.city ? `${nearbyData.city} ` : '';
-        locationLabel = `📍 Showing locations near ${city}ZIP ${nearbyData.zip}`;
+        if (category === 'parks') {
+          // Parks: combine national parks (from /api/search) + state parks (from /api/nearby)
+          results = [...results, ...nearbyData.results];
+          const stateName = nearbyData.state || '';
+          locationLabel = `📍 All National Parks + ${stateName} State Parks`;
+        } else {
+          // ZIP search worked — show only nearby locations + local submissions for that ZIP
+          const localResults = results.filter((r) => r.source === 'local');
+          results = [...nearbyData.results, ...localResults];
+          const city = nearbyData.city ? `${nearbyData.city} ` : '';
+          locationLabel = `📍 Showing locations near ${city}ZIP ${nearbyData.zip}`;
+        }
       } else if (zip.length === 5) {
-        // ZIP entered but Places API unavailable or no matches — show all national chains
-        locationLabel = `Showing all national chains — location search unavailable for ZIP ${zip}`;
+        if (category === 'parks') {
+          locationLabel = `Showing all National Parks — enter a ZIP to also see your state's parks`;
+        } else {
+          // ZIP entered but Places API unavailable or no matches — show all national chains
+          locationLabel = `Showing all national chains — location search unavailable for ZIP ${zip}`;
+        }
       }
 
       renderResults(results, locationLabel);
