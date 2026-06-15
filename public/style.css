@@ -574,6 +574,120 @@ button {
   flex-shrink: 0;
 }
 
+/* ── ZIP code row ── */
+.zip-row {
+  display: flex;
+}
+
+.zip-row input {
+  width: 100%;
+  border-color: rgba(102, 226, 207, 0.25);
+}
+
+.zip-row input:focus {
+  outline: 2px solid rgba(102, 226, 207, 0.5);
+  outline-offset: 2px;
+}
+
+/* ── Local result badge ── */
+.local-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(102, 226, 207, 0.15);
+  border: 1px solid rgba(102, 226, 207, 0.4);
+  color: var(--mint);
+  font-size: 0.82rem;
+  font-weight: 900;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Submission panel ── */
+.submit-panel {
+  margin-top: 4px;
+}
+
+.submit-copy p {
+  color: var(--muted);
+  margin: 6px 0 18px;
+  font-size: 1.03rem;
+  line-height: 1.5;
+}
+
+.submit-form {
+  display: grid;
+  gap: 12px;
+}
+
+.submit-row-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.submit-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 80px 110px;
+  gap: 12px;
+}
+
+.submit-label {
+  display: grid;
+  gap: 6px;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+
+.submit-optional {
+  font-weight: 400;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.submit-label input,
+.submit-label select {
+  width: 100%;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, var(--mint), #3db9a8);
+  color: #1a0d40;
+  font-weight: 900;
+  font-size: 1.05rem;
+  padding: 16px 28px;
+  justify-self: start;
+  border-radius: 999px;
+}
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submit-status {
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.submit-status--success {
+  background: rgba(102, 226, 207, 0.12);
+  border: 1px solid rgba(102, 226, 207, 0.4);
+  color: var(--mint);
+}
+
+.submit-status--error {
+  background: rgba(255, 100, 100, 0.10);
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  color: #ff8a7a;
+}
+
 @media (max-width: 700px) {
   .page-shell {
     width: min(100vw - 14px, 880px);
@@ -629,6 +743,19 @@ button {
 
   .modal-actions button {
     width: 100%;
+  }
+
+  .submit-row-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .submit-row-3 > :last-child {
+    grid-column: 1 / -1;
+  }
+
+  .btn-submit {
+    justify-self: stretch;
+    text-align: center;
   }
 }
 

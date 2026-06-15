@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const Anthropic = require('@anthropic-ai/sdk');
 
-const { getVerifiedLocalBusinesses } = require('./database');
+const { getVerifiedLocalBusinesses, saveLocalBusiness } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,21 +35,50 @@ function searchNationalChains(query) {
   });
 }
 
-// GET /api/search?q=&category=
+// GET /api/search?q=&category=&zip=
 app.get('/api/search', (req, res) => {
   const query = req.query.q || '';
   const category = req.query.category || '';
+  const zip = (req.query.zip || '').replace(/\D/g, '').slice(0, 5);
 
   let results = searchNationalChains(query);
   if (category) {
     results = results.filter((item) => item.category === category);
   }
 
-  const local = getVerifiedLocalBusinesses(query);
+  const local = getVerifiedLocalBusinesses(query, zip);
   res.json({
     query,
+    zip,
     results: [...results.map((r) => ({ ...r, source: 'national' })), ...local],
   });
+});
+
+// POST /api/submit — save a user-submitted local business discount
+app.post('/api/submit', (req, res) => {
+  const { name, address, city, state, zip, category, discount, ageRequirement, conditions, submittedBy } = req.body;
+
+  if (!name || !name.trim()) {
+    return res.status(400).json({ ok: false, error: 'Business name is required.' });
+  }
+  if (!discount || !discount.trim()) {
+    return res.status(400).json({ ok: false, error: 'Discount description is required.' });
+  }
+
+  const id = saveLocalBusiness({
+    name: name.trim(),
+    address: (address || '').trim(),
+    city: (city || '').trim(),
+    state: (state || '').trim().toUpperCase().slice(0, 2),
+    zip: (zip || '').replace(/\D/g, '').slice(0, 5),
+    category: category || 'local',
+    discount: discount.trim(),
+    ageRequirement: parseInt(ageRequirement) || null,
+    conditions: (conditions || '').trim(),
+    submittedBy: (submittedBy || '').trim(),
+  });
+
+  res.json({ ok: true, id });
 });
 
 // POST /api/admin/fetch-details — use Claude to extract senior discount info from a restaurant website

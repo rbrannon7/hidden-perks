@@ -7,10 +7,13 @@ const resultCount = document.getElementById('resultCount');
 const searchForm = document.getElementById('searchForm');
 const queryInput = document.getElementById('queryInput');
 const categoryFilter = document.getElementById('categoryFilter');
+const zipInput = document.getElementById('zipInput');
 const askModal = document.getElementById('askModal');
 const askScript = document.getElementById('askScript');
 const showMode = document.getElementById('showMode');
 const showScript = document.getElementById('showScript');
+const submitForm = document.getElementById('submitForm');
+const submitStatus = document.getElementById('submitStatus');
 
 // === Helpers ===
 function esc(s) {
@@ -56,6 +59,10 @@ function renderResults(results) {
       ? `<span class="age-badge">${item.ageRequirement}+</span>`
       : '';
 
+    const localBadge = item.source === 'local'
+      ? `<span class="local-badge">Local</span>`
+      : '';
+
     const verifiedLine = item.lastVerified
       ? `<p class="last-verified">✓ Verified ${esc(item.lastVerified)}</p>`
       : '';
@@ -69,6 +76,7 @@ function renderResults(results) {
         <div class="card-header">
           <h3>${esc(item.name)}</h3>
           ${ageBadge}
+          ${localBadge}
         </div>
         <p class="card-tagline">Ask for this discount when you make a purchase.</p>
         <div class="detail-box">
@@ -189,9 +197,10 @@ async function fetchAdminDetails(id, url, name) {
 }
 
 // === Search ===
-function fetchResults(query, category = '') {
+function fetchResults(query, category = '', zip = '') {
   const params = new URLSearchParams({ q: query });
   if (category) params.set('category', category);
+  if (zip) params.set('zip', zip);
 
   fetch(`/api/search?${params}`)
     .then((res) => res.json())
@@ -207,11 +216,65 @@ function fetchResults(query, category = '') {
 
 searchForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  fetchResults(queryInput.value.trim(), categoryFilter.value);
+  fetchResults(queryInput.value.trim(), categoryFilter.value, zipInput.value.trim());
 });
 
 // Initial load — show all
 fetchResults('');
+
+// === Submission form ===
+function showSubmitStatus(type, message) {
+  submitStatus.hidden = false;
+  submitStatus.className = `submit-status submit-status--${type}`;
+  submitStatus.textContent = message;
+}
+
+submitForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById('submitName').value.trim();
+  const discount = document.getElementById('submitDiscount').value.trim();
+
+  if (!name) { showSubmitStatus('error', 'Please enter the business name.'); return; }
+  if (!discount) { showSubmitStatus('error', 'Please describe the senior discount.'); return; }
+
+  const payload = {
+    name,
+    city: document.getElementById('submitCity').value.trim(),
+    state: document.getElementById('submitState').value.trim(),
+    zip: document.getElementById('submitZip').value.trim(),
+    category: document.getElementById('submitCategory').value,
+    discount,
+    ageRequirement: parseInt(document.getElementById('submitAge').value) || null,
+    conditions: document.getElementById('submitConditions').value.trim(),
+    submittedBy: document.getElementById('submitEmail').value.trim(),
+  };
+
+  const btn = submitForm.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  try {
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      showSubmitStatus('success', 'Thank you! Your submission is under review and will appear once verified.');
+      submitForm.reset();
+    } else {
+      showSubmitStatus('error', data.error || 'Submission failed. Please try again.');
+    }
+  } catch {
+    showSubmitStatus('error', 'Network error. Please check your connection and try again.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Submit This Discount';
+  }
+});
 
 // PWA install prompt
 let deferredInstall = null;

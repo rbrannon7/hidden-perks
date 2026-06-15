@@ -45,6 +45,9 @@
             <option value="entertainment">Entertainment</option>
             <option value="travel">Travel &amp; Hotels</option>
           </select>
+          <div class="zip-row">
+            <input id="zipInput" name="zip" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" placeholder="Enter ZIP code to find local business discounts near you (optional)" />
+          </div>
           <div class="search-row">
             <input id="queryInput" name="q" type="search" placeholder="e.g. Denny's, Kohl's, CVS, AMC..." />
             <button type="submit">Find My Discount</button>
@@ -61,6 +64,60 @@
           <span id="resultCount" class="pill">0 results</span>
         </div>
         <div id="resultsList" class="results-grid" aria-live="polite"></div>
+      </section>
+
+      <section class="panel submit-panel">
+        <div class="submit-copy">
+          <p class="eyebrow">Community</p>
+          <h2>Know a Local Senior Discount?</h2>
+          <p>Help other seniors save! If you've discovered a local business that offers a senior discount, share it here. We review all submissions before they appear in search results.</p>
+        </div>
+        <form id="submitForm" class="submit-form" novalidate>
+          <div class="submit-row-2">
+            <label class="submit-label">Business Name *
+              <input id="submitName" type="text" placeholder="e.g. Main Street Diner" autocomplete="organization" />
+            </label>
+            <label class="submit-label">Category
+              <select id="submitCategory" class="category-select">
+                <option value="">Select a category</option>
+                <option value="restaurant">Restaurant</option>
+                <option value="retail">Retail &amp; Shopping</option>
+                <option value="pharmacy">Pharmacy</option>
+                <option value="grocery">Grocery</option>
+                <option value="entertainment">Entertainment</option>
+                <option value="travel">Travel &amp; Hotels</option>
+                <option value="local">Other Local Business</option>
+              </select>
+            </label>
+          </div>
+          <label class="submit-label">Discount Description *
+            <input id="submitDiscount" type="text" placeholder="e.g. 10% off every Tuesday for customers 60 and older" />
+          </label>
+          <div class="submit-row-3">
+            <label class="submit-label">City
+              <input id="submitCity" type="text" placeholder="City" autocomplete="address-level2" />
+            </label>
+            <label class="submit-label">State
+              <input id="submitState" type="text" placeholder="UT" maxlength="2" autocomplete="address-level1" />
+            </label>
+            <label class="submit-label">ZIP Code
+              <input id="submitZip" type="text" inputmode="numeric" placeholder="84321" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code" />
+            </label>
+          </div>
+          <div class="submit-row-2">
+            <label class="submit-label">Age Requirement
+              <input id="submitAge" type="number" placeholder="e.g. 55" min="50" max="75" />
+            </label>
+            <label class="submit-label">Conditions / Notes
+              <input id="submitConditions" type="text" placeholder="e.g. Dine-in only, must show ID" />
+            </label>
+          </div>
+          <label class="submit-label">Your Email <span class="submit-optional">(optional — only if you'd like a follow-up)</span>
+            <input id="submitEmail" type="email" placeholder="you@example.com" autocomplete="email" />
+          </label>
+          <div id="submitStatus" class="submit-status" hidden></div>
+          <button type="submit" class="btn-submit">Submit This Discount</button>
+        </form>
       </section>
 
     </main>

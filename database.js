@@ -52,22 +52,26 @@ function saveLocalBusiness(submission) {
   return record.id;
 }
 
-function getVerifiedLocalBusinesses(query = '') {
+function getVerifiedLocalBusinesses(query = '', zip = '') {
   const term = String(query || '').trim().toLowerCase();
-  const items = readSubmissions().filter((item) => item.verified === 1);
+  const zipTerm = String(zip || '').replace(/\D/g, '').slice(0, 5);
+  let items = readSubmissions().filter((item) => item.verified === 1);
+
+  if (zipTerm) {
+    items = items.filter((item) => item.zip === zipTerm);
+  }
 
   if (!term) {
-    return items.slice(0, 25);
+    return items.slice(0, 50).map((r) => ({ ...r, source: 'local' }));
   }
 
   return items.filter((item) => {
-    const haystack = [item.name, item.category, item.discount, item.conditions]
+    const haystack = [item.name, item.category, item.discount, item.conditions, item.city, item.state]
       .filter(Boolean)
       .join(' ')
       .toLowerCase();
-
     return haystack.includes(term);
-  }).slice(0, 25);
+  }).slice(0, 50).map((r) => ({ ...r, source: 'local' }));
 }
 
 module.exports = {
