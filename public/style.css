@@ -684,6 +684,8 @@ button {
   color: #000;
   font-style: normal;
   font-variant-emoji: text;
+  font-size: 1.3em;
+  line-height: 1;
 }
 
 .result-card--featured {
