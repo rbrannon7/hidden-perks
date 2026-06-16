@@ -156,8 +156,38 @@ Suggested order:
 - User accounts or login
 - AI-powered verification of submissions
 - Native mobile app (responsive web is fine)
-- Payment or monetization
 - Ratings or reviews
+
+---
+
+## Monetization Plan — Local Sponsored Listings
+
+**Strategy:** Businesses pay a monthly fee to appear at the top of search results for their category and ZIP area. Users see a "Featured" badge. Everything else stays free and unchanged for users.
+
+**Why this model:**
+- Businesses with senior discounts *want* seniors to find them — seniors are loyal customers, tip well, and shop during slow hours
+- Restaurants (the biggest app category) can't do affiliate links but absolutely can do a sponsored listing
+- Cheaper and more targeted than Yelp ads, Facebook ads, or Google ads for reaching local seniors
+
+**Launch market: Cache County / Logan, Utah**
+- Rob has prior connections here from a previous Cache County senior discount app
+- Goal: get 100–200 real local monthly users first, then approach businesses in person
+- Pitch to a business owner: "X seniors in Cache County searched for restaurant discounts last month — for $25/month your restaurant appears first"
+
+**Pricing target:** $25–$40/month per sponsored business
+
+**Implementation sequence:**
+1. Build local Cache County user base first (share with senior center, local Facebook groups)
+2. Manually offer 5 local businesses a free 30-day featured trial
+3. Convert to paid at $25–$40/month after trial
+4. Once proven, build self-serve signup + Stripe payment so businesses can pay without Rob's involvement
+5. Expand to additional markets
+
+**Code changes needed (when ready to build):**
+- Add `featured` boolean field to the local businesses database table
+- Add `featured` flag support to `national-chains.json` for any national chain that pays for placement
+- Sort featured results to the top in `/api/search` and `/api/nearby`
+- Add a "Featured" badge style to result cards in `app.js` and `style.css`
 
 ---
 
