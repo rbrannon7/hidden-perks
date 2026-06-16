@@ -320,6 +320,8 @@ app.get('/api/nearby', async (req, res) => {
     const results = [];
     const seenChainIds = new Set();
 
+    const STOPWORDS = new Set(['the', 'a', 'an']);
+
     for (const place of places) {
       const placeName = normalize(place.name);
       const match = nationalChains.find((chain) => {
@@ -328,8 +330,9 @@ app.get('/api/nearby', async (req, res) => {
         if (placeName.includes(chainName) || chainName.includes(placeName)) return true;
         // Google often appends a location/screen-count suffix (e.g. "AMC Logan 8", "Cinemark Cache Valley").
         // Try matching on the first brand word so those still resolve to our chain entry.
+        // Skip generic leading words (e.g. "The") so unrelated chains sharing a stopword don't false-match.
         const brandWord = chainName.split(' ')[0];
-        if (brandWord.length >= 3 && placeName.startsWith(brandWord)) return true;
+        if (brandWord.length >= 3 && !STOPWORDS.has(brandWord) && placeName.startsWith(brandWord)) return true;
         return false;
       });
 

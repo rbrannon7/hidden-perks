@@ -7,6 +7,7 @@
   --border: rgba(255,255,255,0.12);
   --gold: #ffd56f;
   --mint: #66e2cf;
+  --coral: #ff7a5c;
 }
 
 * { box-sizing: border-box; }
@@ -667,9 +668,9 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: linear-gradient(135deg, rgba(255, 213, 111, 0.28), rgba(255, 180, 50, 0.18));
-  border: 1px solid rgba(255, 213, 111, 0.7);
-  color: var(--gold);
+  background: var(--coral);
+  border: 1px solid var(--coral);
+  color: var(--bg);
   font-size: 0.82rem;
   font-weight: 900;
   border-radius: 999px;
@@ -680,8 +681,9 @@ button {
 }
 
 .result-card--featured {
-  border-color: rgba(255, 213, 111, 0.45);
-  box-shadow: 0 0 0 1px rgba(255, 213, 111, 0.18), 0 8px 24px rgba(255, 213, 111, 0.08);
+  border-color: rgba(255, 213, 111, 0.85);
+  border-width: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 213, 111, 0.35), 0 8px 28px rgba(255, 213, 111, 0.18);
 }
 
 /* ── Local result badge ── */
