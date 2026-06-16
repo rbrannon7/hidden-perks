@@ -76,7 +76,7 @@ function renderResults(results, locationLabel = '') {
       : '';
 
     const featuredBadge = item.featured
-      ? `<span class="featured-badge">⭐ Featured</span>`
+      ? `<span class="featured-badge"><span class="featured-star">★</span> Featured</span>`
       : '';
 
     const localBadge = item.source === 'local'

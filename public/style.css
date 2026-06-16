@@ -680,6 +680,12 @@ button {
   text-transform: uppercase;
 }
 
+.featured-star {
+  color: #000;
+  font-style: normal;
+  font-variant-emoji: text;
+}
+
 .result-card--featured {
   border-color: rgba(255, 213, 111, 0.85);
   border-width: 2px;
