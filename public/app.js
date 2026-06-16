@@ -62,6 +62,9 @@ function renderResults(results, locationLabel = '') {
     return;
   }
 
+  // Featured sponsors always appear first
+  results.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+
   resultsList.innerHTML = results.map((item) => {
     const conditions = item.conditions || 'Ask at the register for current terms';
     const officialUrl = item.sourceUrl
@@ -70,6 +73,10 @@ function renderResults(results, locationLabel = '') {
 
     const ageBadge = item.ageRequirement
       ? `<span class="age-badge">${item.ageRequirement}+</span>`
+      : '';
+
+    const featuredBadge = item.featured
+      ? `<span class="featured-badge">⭐ Featured</span>`
       : '';
 
     const localBadge = item.source === 'local'
@@ -91,10 +98,11 @@ function renderResults(results, locationLabel = '') {
       : '';
 
     return `
-      <article class="result-card" id="card-${esc(item.id)}">
+      <article class="result-card${item.featured ? ' result-card--featured' : ''}" id="card-${esc(item.id)}">
         <div class="card-header">
           <h3>${esc(item.name)}</h3>
           ${ageBadge}
+          ${featuredBadge}
           ${localBadge}
         </div>
         ${item.address ? `<p class="card-address">📍 ${esc(item.address)}</p>` : `<p class="card-tagline">Ask for this discount when you make a purchase.</p>`}
