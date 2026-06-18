@@ -196,6 +196,11 @@ app.post('/api/admin/reject/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// In-memory cache for /api/nearby responses, keyed by zip+category, to avoid
+// re-hitting Google's Geocoding/Places APIs for repeat searches.
+const NEARBY_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const nearbyCache = new Map();
+
 // GET /api/nearby?zip=84321&category=restaurant
 // Requires GOOGLE_PLACES_API_KEY environment variable — returns 503 until configured.
 app.get('/api/nearby', async (req, res) => {
@@ -204,6 +209,12 @@ app.get('/api/nearby', async (req, res) => {
 
   if (!zip || zip.length < 5) {
     return res.status(400).json({ ok: false, error: 'Enter a valid 5-digit ZIP code.' });
+  }
+
+  const cacheKey = `${zip}:${category}`;
+  const cached = nearbyCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < NEARBY_CACHE_TTL_MS) {
+    return res.json(cached.data);
   }
 
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
@@ -235,7 +246,9 @@ app.get('/api/nearby', async (req, res) => {
       const nearby = stateParks
         .filter((p) => p.state === stateCode)
         .map((p) => ({ ...p, source: 'nearby', nearZip: zip, nearCity: cityName, nearState: stateCode }));
-      return res.json({ ok: true, zip, city: cityName, state: stateCode, lat, lng, results: nearby });
+      const data = { ok: true, zip, city: cityName, state: stateCode, lat, lng, results: nearby };
+      nearbyCache.set(cacheKey, { timestamp: Date.now(), data });
+      return res.json(data);
     }
 
     // Step 2: nearby search
@@ -243,40 +256,21 @@ app.get('/api/nearby', async (req, res) => {
     const radius = category === 'entertainment' ? 80467 : 32000;
     const baseUrl = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&key=${apiKey}`;
 
-    // Fetch one or more Places URLs in parallel, then automatically fetch the next page
-    // for any call that has more results (Google requires a 2-second delay before next-page).
-    // Returns a deduplicated array of place objects across all calls and pages.
+    // Fetch one or more Places URLs in parallel, deduplicated by place_id.
+    // Only the first page (up to 20 results per URL) is used — fetching additional
+    // pages requires a mandatory 2-second wait per Google's API, which isn't worth
+    // the delay for this app's purposes.
     async function fetchPlaces(urls) {
       const seen = new Set();
       const all = [];
 
-      const merge = (results) => {
-        for (const p of (results || [])) {
-          if (!seen.has(p.place_id)) { seen.add(p.place_id); all.push(p); }
-        }
-      };
-
-      // Page 1 — all URLs in parallel
-      const page1 = await Promise.all(
+      const pages = await Promise.all(
         urls.map(u => fetch(u, { signal: AbortSignal.timeout(8000) }).then(r => r.json()).catch(() => ({ results: [] })))
       );
-      const tokens = [];
-      for (const d of page1) {
-        merge(d.results);
-        if (d.next_page_token) tokens.push(d.next_page_token);
-      }
-
-      // Page 2 — fetch next pages in parallel if any exist (2-second mandatory delay)
-      if (tokens.length > 0) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        const page2 = await Promise.all(
-          tokens.map(t =>
-            fetch(`https://maps.googleapis.com/maps/api/place/nearbysearch/json?pagetoken=${t}&key=${apiKey}`,
-              { signal: AbortSignal.timeout(8000) }
-            ).then(r => r.json()).catch(() => ({ results: [] }))
-          )
-        );
-        for (const d of page2) merge(d.results);
+      for (const d of pages) {
+        for (const p of (d.results || [])) {
+          if (!seen.has(p.place_id)) { seen.add(p.place_id); all.push(p); }
+        }
       }
 
       return all;
@@ -359,7 +353,9 @@ app.get('/api/nearby', async (req, res) => {
 
     // Google already filtered by type; don't re-filter by our internal category
     const debug_place_names = places.map((p) => p.name);
-    res.json({ ok: true, zip, city: cityName, lat, lng, results, debug_place_names });
+    const data = { ok: true, zip, city: cityName, lat, lng, results, debug_place_names };
+    nearbyCache.set(cacheKey, { timestamp: Date.now(), data });
+    res.json(data);
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }
