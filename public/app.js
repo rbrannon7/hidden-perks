@@ -339,36 +339,46 @@ submitForm.addEventListener('submit', async (e) => {
   }
 });
 
-// PWA install prompt
+// === PWA install prompt ===
 let deferredInstall = null;
 const installBanner = document.getElementById('installBanner');
 const installBtn = document.getElementById('installBtn');
 const installDismiss = document.getElementById('installDismiss');
+const installText = document.getElementById('installText');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredInstall = e;
-  if (installBanner) installBanner.hidden = false;
-});
+// Already running as an installed app (standalone) — never show the banner
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
 
-if (installBtn) {
-  installBtn.addEventListener('click', async () => {
-    if (!deferredInstall) return;
-    deferredInstall.prompt();
-    const { outcome } = await deferredInstall.userChoice;
-    deferredInstall = null;
-    if (installBanner) installBanner.hidden = true;
-  });
-}
+if (installBanner && !isStandalone) {
+  if (isIOS) {
+    // iOS Safari never fires beforeinstallprompt — show manual instructions instead of a button
+    installText.textContent = 'Tap the Share icon below, then "Add to Home Screen" for one-tap access.';
+    installBtn.hidden = true;
+    installBanner.hidden = false;
+  } else {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstall = e;
+      installBanner.hidden = false;
+    });
 
-if (installDismiss) {
+    installBtn.addEventListener('click', async () => {
+      if (!deferredInstall) return;
+      deferredInstall.prompt();
+      await deferredInstall.userChoice;
+      deferredInstall = null;
+      installBanner.hidden = true;
+    });
+  }
+
   installDismiss.addEventListener('click', () => {
-    if (installBanner) installBanner.hidden = true;
+    installBanner.hidden = true;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installBanner.hidden = true;
+    deferredInstall = null;
   });
 }
-
-window.addEventListener('appinstalled', () => {
-  if (installBanner) installBanner.hidden = true;
-  deferredInstall = null;
-});
 

@@ -546,12 +546,29 @@ button {
   box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.4);
 }
 
-.install-text {
+.install-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.install-copy {
   flex: 1;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
   min-width: 200px;
+}
+
+.install-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 2px;
+}
+
+.install-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin: 0;
 }
 
 .install-btn {

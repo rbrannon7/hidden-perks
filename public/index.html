@@ -124,10 +124,14 @@
 
     </main>
 
-    <!-- PWA install banner (shown automatically when installable) -->
+    <!-- PWA install banner (shown automatically when installable; hidden if already installed) -->
     <div id="installBanner" class="install-banner" hidden>
-      <span class="install-text">Add HiddenPerks to your home screen for quick access</span>
-      <button type="button" id="installBtn" class="install-btn">Add to Home Screen</button>
+      <span class="install-icon" aria-hidden="true">📲</span>
+      <div class="install-copy">
+        <p class="install-title">Install HiddenPerks</p>
+        <p class="install-text" id="installText">Add it to your home screen for one-tap access to discounts.</p>
+      </div>
+      <button type="button" id="installBtn" class="install-btn">Install App</button>
       <button type="button" id="installDismiss" class="install-dismiss" aria-label="Dismiss">✕</button>
     </div>
 
