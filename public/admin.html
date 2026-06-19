@@ -301,14 +301,13 @@
       }
 
       .approved-label {
-        color: var(--mint);
+        color: var(--gold);
         font-weight: 900;
         font-size: 0.9rem;
       }
 
-      .detail-grid {
+      .detail-stack {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
         gap: 8px;
       }
 
@@ -491,15 +490,15 @@
           if (editingId === s.id) return renderEditForm(s);
 
           const date = s.created_at ? new Date(s.created_at).toLocaleDateString() : '—';
-          const location = [s.city, s.state, s.zip].filter(Boolean).join(', ') || 'Location not provided';
+          const cityStateZip = [[s.city, s.state].filter(Boolean).join(', '), s.zip].filter(Boolean).join(' ');
+          const fullAddress = [s.address, cityStateZip].filter(Boolean).join(', ') || 'Not provided';
           return `
             <div class="submission-card" id="card-${s.id}">
               <div class="card-top">
                 <div>
                   <h3 class="card-name">${esc(s.name)}</h3>
                   <p class="card-meta">
-                    ${esc(location)} &bull; ${esc(s.category || 'local')} &bull; Submitted ${esc(date)}
-                    ${s.submitted_by ? ' by ' + esc(s.submitted_by) : ''}
+                    Submitted ${esc(date)}${s.submitted_by ? ' by ' + esc(s.submitted_by) : ''}
                   </p>
                 </div>
                 <div class="card-actions">
@@ -512,25 +511,28 @@
                   }
                 </div>
               </div>
-              <div class="detail-grid">
+              <div class="detail-stack">
                 <div class="detail-item">
-                  <div class="detail-label">Discount</div>
-                  <div class="detail-value">${esc(s.discount)}</div>
+                  <div class="detail-label">Address</div>
+                  <div class="detail-value">${esc(fullAddress)}</div>
+                </div>
+                <div class="detail-item">
+                  <div class="detail-label">Category</div>
+                  <div class="detail-value">${esc(s.category || 'local')}</div>
                 </div>
                 ${s.age_requirement ? `
                 <div class="detail-item">
                   <div class="detail-label">Age Requirement</div>
                   <div class="detail-value">${esc(s.age_requirement)}+</div>
                 </div>` : ''}
+                <div class="detail-item">
+                  <div class="detail-label">Discount Details</div>
+                  <div class="detail-value">${esc(s.discount)}</div>
+                </div>
                 ${s.conditions ? `
                 <div class="detail-item">
-                  <div class="detail-label">Conditions</div>
+                  <div class="detail-label">Conditions / Notes</div>
                   <div class="detail-value">${esc(s.conditions)}</div>
-                </div>` : ''}
-                ${s.address ? `
-                <div class="detail-item">
-                  <div class="detail-label">Address</div>
-                  <div class="detail-value">${esc(s.address)}</div>
                 </div>` : ''}
               </div>
             </div>`;
