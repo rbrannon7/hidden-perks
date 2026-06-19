@@ -86,7 +86,12 @@ function updateSubmission(id, fields) {
 
   const editable = ['name', 'address', 'city', 'state', 'zip', 'category', 'discount', 'conditions'];
   for (const key of editable) {
-    if (fields[key] !== undefined) {
+    if (fields[key] === undefined) continue;
+    if (key === 'zip') {
+      items[idx].zip = String(fields.zip).replace(/\D/g, '').slice(0, 5);
+    } else if (key === 'state') {
+      items[idx].state = String(fields.state).trim().toUpperCase().slice(0, 2);
+    } else {
       items[idx][key] = String(fields[key]).trim();
     }
   }
