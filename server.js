@@ -159,8 +159,9 @@ app.post('/api/admin/fetch-details', adminLimiter, async (req, res) => {
         .replace(/<script[\s\S]*?<\/script>/gi, '')
         .replace(/<style[\s\S]*?<\/style>/gi, '')
         .slice(0, 15000);
-    } catch {
+    } catch (err) {
       // Fall back to knowledge-only prompt if the site can't be fetched
+      console.error(`fetch-details: failed to fetch ${url} —`, err.message);
     }
   }
 
@@ -183,12 +184,14 @@ app.post('/api/admin/fetch-details', adminLimiter, async (req, res) => {
 
     const match = text.match(/\{[\s\S]*?\}/);
     if (!match) {
+      console.error(`fetch-details: no JSON in Claude response for "${businessName}" —`, text.slice(0, 500));
       return res.status(502).json({ error: 'No JSON found in AI response', raw: text.slice(0, 500) });
     }
 
     const extracted = JSON.parse(match[0]);
     res.json({ ok: true, businessId, extracted, sourceUrl: url || '' });
   } catch (err) {
+    console.error('fetch-details: Claude API error —', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -326,7 +329,10 @@ app.get('/api/nearby', nearbyLimiter, async (req, res) => {
       const all = [];
 
       const pages = await Promise.all(
-        urls.map(u => fetch(u, { signal: AbortSignal.timeout(8000) }).then(r => r.json()).catch(() => ({ results: [] })))
+        urls.map(u => fetch(u, { signal: AbortSignal.timeout(8000) }).then(r => r.json()).catch((err) => {
+          console.error(`nearby: Places fetch failed for ${u} —`, err.message);
+          return { results: [] };
+        }))
       );
       for (const d of pages) {
         for (const p of (d.results || [])) {
@@ -418,6 +424,7 @@ app.get('/api/nearby', nearbyLimiter, async (req, res) => {
     nearbyCache.set(cacheKey, { timestamp: Date.now(), data });
     res.json(filterByQuery(data));
   } catch (err) {
+    console.error(`nearby: unexpected error for zip ${zip}, category ${category} —`, err.message);
     res.status(500).json({ ok: false, error: err.message });
   }
 });
