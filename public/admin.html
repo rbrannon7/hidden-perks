@@ -198,7 +198,12 @@
 
       .edit-field textarea {
         resize: vertical;
-        min-height: 44px;
+        min-height: 120px;
+        line-height: 1.5;
+      }
+
+      .edit-field textarea.edit-textarea-lg {
+        min-height: 180px;
       }
 
       .error-msg {
@@ -541,11 +546,11 @@
             </div>
             <div class="edit-field" style="margin-bottom:8px">
               <label>Discount</label>
-              <textarea id="edit-discount-${s.id}">${esc(s.discount || '')}</textarea>
+              <textarea id="edit-discount-${s.id}" class="edit-textarea-lg">${esc(s.discount || '')}</textarea>
             </div>
             <div class="edit-field" style="margin-bottom:12px">
               <label>Conditions</label>
-              <textarea id="edit-conditions-${s.id}">${esc(s.conditions || '')}</textarea>
+              <textarea id="edit-conditions-${s.id}" class="edit-textarea-lg">${esc(s.conditions || '')}</textarea>
             </div>
             <div class="card-actions">
               <button class="btn btn-save" onclick="saveEdit(${s.id})">Save</button>
