@@ -65,12 +65,15 @@ app.get('/api/search', (req, res) => {
   const category = req.query.category || '';
   const zip = (req.query.zip || '').replace(/\D/g, '').slice(0, 5);
 
+  const matchesParkQuery = (p) =>
+    textMatches([p.name, p.category, p.discount, p.conditions, p.state].filter(Boolean).join(' '), query);
+
   // National Parks: always return all national parks nationwide, regardless of ZIP
   if (category === 'national-parks') {
     return res.json({
       query,
       zip,
-      results: nationalParks.map((p) => ({ ...p, source: 'national' })),
+      results: nationalParks.filter(matchesParkQuery).map((p) => ({ ...p, source: 'national' })),
     });
   }
 
@@ -80,7 +83,7 @@ app.get('/api/search', (req, res) => {
     return res.json({
       query,
       zip,
-      results: stateParks.map((p) => ({ ...p, source: 'national' })),
+      results: stateParks.filter(matchesParkQuery).map((p) => ({ ...p, source: 'national' })),
     });
   }
 
@@ -245,6 +248,20 @@ const nearbyCache = new Map();
 app.get('/api/nearby', nearbyLimiter, async (req, res) => {
   const zip = (req.query.zip || '').replace(/\D/g, '').slice(0, 5);
   const category = req.query.category || '';
+  const query = req.query.q || '';
+
+  // Cached/fetched results are stored unfiltered (keyed only on zip+category) so the
+  // cache stays reusable across different name searches; the typed name is applied
+  // as a filter on top, per request, so it doesn't bypass the cache.
+  const filterByQuery = (data) => {
+    if (!query) return data;
+    return {
+      ...data,
+      results: data.results.filter((r) =>
+        textMatches([r.name, r.category, r.discount, r.conditions].filter(Boolean).join(' '), query)
+      ),
+    };
+  };
 
   if (!zip || zip.length < 5) {
     return res.status(400).json({ ok: false, error: 'Enter a valid 5-digit ZIP code.' });
@@ -258,7 +275,7 @@ app.get('/api/nearby', nearbyLimiter, async (req, res) => {
   const cacheKey = `${zip}:${category}`;
   const cached = nearbyCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < NEARBY_CACHE_TTL_MS) {
-    return res.json(cached.data);
+    return res.json(filterByQuery(cached.data));
   }
 
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
@@ -292,7 +309,7 @@ app.get('/api/nearby', nearbyLimiter, async (req, res) => {
         .map((p) => ({ ...p, source: 'nearby', nearZip: zip, nearCity: cityName, nearState: stateCode }));
       const data = { ok: true, zip, city: cityName, state: stateCode, lat, lng, results: nearby };
       nearbyCache.set(cacheKey, { timestamp: Date.now(), data });
-      return res.json(data);
+      return res.json(filterByQuery(data));
     }
 
     // Step 2: nearby search
@@ -399,7 +416,7 @@ app.get('/api/nearby', nearbyLimiter, async (req, res) => {
     const debug_place_names = places.map((p) => p.name);
     const data = { ok: true, zip, city: cityName, lat, lng, results, debug_place_names };
     nearbyCache.set(cacheKey, { timestamp: Date.now(), data });
-    res.json(data);
+    res.json(filterByQuery(data));
   } catch (err) {
     res.status(500).json({ ok: false, error: err.message });
   }

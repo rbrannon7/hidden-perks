@@ -247,7 +247,7 @@ function fetchResults(query, category = '', zip = '') {
 
   // National Parks and Online Businesses are nationwide and never depend on ZIP — no need to hit /api/nearby
   const nearbySearch = zip.length === 5 && category !== 'national-parks' && category !== 'online'
-    ? fetch(`/api/nearby?${new URLSearchParams({ zip, ...(category && { category }) })}`)
+    ? fetch(`/api/nearby?${new URLSearchParams({ zip, ...(category && { category }), ...(query && { q: query }) })}`)
         .then((r) => r.json())
         .catch(() => null)
     : Promise.resolve(null);
@@ -279,8 +279,16 @@ function fetchResults(query, category = '', zip = '') {
         results = [...nearbyData.results, ...localResults];
         const city = nearbyData.city ? `${nearbyData.city} ` : '';
         locationLabel = `📍 Showing locations near ${city}ZIP ${nearbyData.zip}`;
+      } else if (nearbyData?.ok) {
+        // Places lookup worked but nothing matched (e.g. the typed name has no nearby
+        // location) — still show any local submissions for this ZIP that matched
+        results = results.filter((r) => r.source === 'local');
+        const city = nearbyData.city ? `${nearbyData.city} ` : '';
+        locationLabel = query
+          ? `No matches for "${query}" near ${city}ZIP ${zip}`
+          : `No nearby matches found for ZIP ${zip}`;
       } else if (zip.length === 5) {
-        // ZIP entered but Places API unavailable or no matches — show all national chains
+        // ZIP entered but Places API unavailable — show all national chains
         locationLabel = `Showing all national chains — location search unavailable for ZIP ${zip}`;
       }
 
