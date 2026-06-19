@@ -403,7 +403,12 @@ app.get('/api/nearby', nearbyLimiter, async (req, res) => {
           id: `nearby-${place.place_id}`,
           nationalId: match.id,
           name: place.name,
+          // Google's "vicinity" already includes the city (e.g. "865 South Main
+          // Street, Logan"), so state/zip are added separately here rather than
+          // a city field, which would otherwise duplicate it in the displayed address.
           address: place.vicinity,
+          state: stateCode,
+          zip,
           category: match.category,
           discount: match.discount,
           ageRequirement: match.ageRequirement,
