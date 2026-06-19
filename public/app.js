@@ -98,10 +98,6 @@ function renderResults(results, locationLabel = '') {
             ? `<span class="nearby-badge">📍 Near You</span>`
             : '';
 
-    const verifiedLine = item.lastVerified
-      ? `<p class="last-verified">✓ Verified ${esc(item.lastVerified)}</p>`
-      : '';
-
     const adminBtn = IS_ADMIN
       ? `<button type="button" class="btn-admin-fetch" data-id="${esc(item.id)}" data-url="${esc(item.sourceUrl || '')}" data-name="${esc(item.name)}">↺ Fetch Details</button>`
       : '';
@@ -120,13 +116,13 @@ function renderResults(results, locationLabel = '') {
         ${fullLocation ? `<p class="card-address">📍 ${esc(fullLocation)}</p>` : `<p class="card-tagline">Ask for this discount when you make a purchase.</p>`}
         <div class="detail-box">
           <p class="detail-label"><b>Discount Details</b></p>
+          <p class="discount-disclaimer">Discount terms may change — please confirm with the business.</p>
           <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
         </div>
         <div class="detail-box">
           <p class="detail-label"><b>Conditions</b></p>
           <p class="detail-value">${formatConditions(conditions)}</p>
         </div>
-        ${verifiedLine}
         <div id="admin-preview-${esc(item.id)}" class="admin-preview" hidden></div>
         <div class="result-actions">
           <button type="button" class="btn-ask"

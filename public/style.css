@@ -343,11 +343,11 @@ button {
   color: var(--muted);
 }
 
-.last-verified {
-  margin: 4px 0 0;
-  font-size: 0.88rem;
-  color: var(--mint);
-  font-weight: 600;
+.discount-disclaimer {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--muted);
 }
 
 .result-tag {
