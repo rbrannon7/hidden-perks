@@ -3,14 +3,40 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const Anthropic = require('@anthropic-ai/sdk');
+const rateLimit = require('express-rate-limit');
 
 const { getVerifiedLocalBusinesses, saveLocalBusiness, getAllSubmissions, approveSubmission, rejectSubmission } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+const submitLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Too many submissions — please try again later.' },
+});
+
+const nearbyLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Too many requests — please try again later.' },
+});
+
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: 'Too many admin requests — please try again later.' },
+});
 
 const nationalChainsPath = path.join(__dirname, 'data', 'national-chains.json');
 const nationalChains = JSON.parse(fs.readFileSync(nationalChainsPath, 'utf8'));
@@ -81,7 +107,7 @@ app.get('/api/search', (req, res) => {
 });
 
 // POST /api/submit — save a user-submitted local business discount
-app.post('/api/submit', (req, res) => {
+app.post('/api/submit', submitLimiter, (req, res) => {
   const { name, address, city, state, zip, category, discount, ageRequirement, conditions, submittedBy } = req.body;
 
   if (!name || !name.trim()) {
@@ -108,7 +134,8 @@ app.post('/api/submit', (req, res) => {
 });
 
 // POST /api/admin/fetch-details — use Claude to extract senior discount info from a restaurant website
-app.post('/api/admin/fetch-details', async (req, res) => {
+app.post('/api/admin/fetch-details', adminLimiter, async (req, res) => {
+  if (!requireAdmin(req, res)) return;
   const { businessId, url, businessName } = req.body;
 
   if (!url && !businessName) {
@@ -187,13 +214,13 @@ function requireAdmin(req, res) {
 }
 
 // GET /api/admin/submissions
-app.get('/api/admin/submissions', (req, res) => {
+app.get('/api/admin/submissions', adminLimiter, (req, res) => {
   if (!requireAdmin(req, res)) return;
   res.json({ ok: true, submissions: getAllSubmissions() });
 });
 
 // POST /api/admin/approve/:id
-app.post('/api/admin/approve/:id', (req, res) => {
+app.post('/api/admin/approve/:id', adminLimiter, (req, res) => {
   if (!requireAdmin(req, res)) return;
   const ok = approveSubmission(req.params.id);
   if (!ok) return res.status(404).json({ ok: false, error: 'Submission not found.' });
@@ -201,7 +228,7 @@ app.post('/api/admin/approve/:id', (req, res) => {
 });
 
 // POST /api/admin/reject/:id
-app.post('/api/admin/reject/:id', (req, res) => {
+app.post('/api/admin/reject/:id', adminLimiter, (req, res) => {
   if (!requireAdmin(req, res)) return;
   const ok = rejectSubmission(req.params.id);
   if (!ok) return res.status(404).json({ ok: false, error: 'Submission not found.' });
@@ -215,7 +242,7 @@ const nearbyCache = new Map();
 
 // GET /api/nearby?zip=84321&category=restaurant
 // Requires GOOGLE_PLACES_API_KEY environment variable — returns 503 until configured.
-app.get('/api/nearby', async (req, res) => {
+app.get('/api/nearby', nearbyLimiter, async (req, res) => {
   const zip = (req.query.zip || '').replace(/\D/g, '').slice(0, 5);
   const category = req.query.category || '';
 
