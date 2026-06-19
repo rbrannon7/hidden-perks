@@ -50,7 +50,7 @@
       <section class="panel search-panel">
         <div class="search-copy">
           <h2>Search Businesses for Senior Discounts</h2>
-          <p>Choose a category or type a business name:</p>
+          <p>Choose a category, enter your Zip Code, or type a business name:</p>
         </div>
         <form id="searchForm" class="search-form">
           <select id="categoryFilter" class="category-select">
@@ -66,10 +66,10 @@
             <option value="state-parks">State Parks</option>
           </select>
           <div class="zip-row">
-            <input id="zipInput" name="zip" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" placeholder="Enter ZIP for local discounts (optional)" />
+            <input id="zipInput" name="zip" type="text" inputmode="numeric" maxlength="5" pattern="[0-9]{5}" placeholder="Enter your Zip Code to find discounts near you (optional)" />
           </div>
           <div class="search-row">
-            <input id="queryInput" name="q" type="search" placeholder="e.g. Olive Garden, Kohl's, CVS..." />
+            <input id="queryInput" name="q" type="search" placeholder="Type a business name, e.g. Olive Garden, Kohl's, CVS..." />
             <button type="submit">Find My Discount</button>
           </div>
         </form>
