@@ -883,9 +883,13 @@ button {
 
 .site-footer {
   text-align: center;
-  padding: 24px 0 4px;
+  padding: 10px 0 4px;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.site-footer p {
+  margin: 0 0 8px;
 }
 
 .site-footer a {
