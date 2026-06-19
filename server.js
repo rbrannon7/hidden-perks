@@ -94,11 +94,12 @@ app.get('/api/search', (req, res) => {
   }
 
   let results = searchNationalChains(query);
+  let local = getVerifiedLocalBusinesses(query, zip);
   if (category) {
     results = results.filter((item) => item.category === category);
+    local = local.filter((item) => item.category === category);
   }
 
-  const local = getVerifiedLocalBusinesses(query, zip);
   res.json({
     query,
     zip,
