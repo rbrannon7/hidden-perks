@@ -41,6 +41,7 @@ function buildScript(name, discount, ageReq, conditions) {
     `Discount: ${discount || 'Ask at the register'}`,
     `Age Required: ${age}`,
     `Conditions: ${stripBold(conditions) || 'Ask at the register for current terms'}`,
+    `Note: Terms may vary — please confirm with staff.`,
   ];
   return lines.join('\n');
 }
