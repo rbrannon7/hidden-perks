@@ -139,6 +139,68 @@
         font-size: 0.9rem;
       }
 
+      .btn-edit {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        color: var(--text);
+        font-weight: 700;
+        padding: 10px 18px;
+        font-size: 0.9rem;
+      }
+
+      .btn-save {
+        background: linear-gradient(135deg, #66e2cf, #3db9a8);
+        color: #1a0d40;
+        font-weight: 900;
+        padding: 10px 18px;
+        font-size: 0.9rem;
+      }
+
+      .btn-cancel {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--muted);
+        font-weight: 700;
+        padding: 10px 18px;
+        font-size: 0.9rem;
+      }
+
+      .edit-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .edit-field {
+        display: grid;
+        gap: 4px;
+      }
+
+      .edit-field label {
+        color: var(--gold);
+        font-size: 0.72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .edit-field input,
+      .edit-field textarea {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font: inherit;
+        font-size: 0.95rem;
+        color: #fff;
+      }
+
+      .edit-field textarea {
+        resize: vertical;
+        min-height: 44px;
+      }
+
       .error-msg {
         color: #ff8a7a;
         font-size: 0.92rem;
@@ -312,6 +374,7 @@
     <script>
       let allSubmissions = [];
       let activeTab = 'pending';
+      let editingId = null;
 
       function esc(s) {
         return String(s == null ? '' : s)
@@ -394,6 +457,8 @@
         }
 
         container.innerHTML = list.map((s) => {
+          if (editingId === s.id) return renderEditForm(s);
+
           const date = s.created_at ? new Date(s.created_at).toLocaleDateString() : '—';
           const location = [s.city, s.state, s.zip].filter(Boolean).join(', ') || 'Location not provided';
           return `
@@ -409,8 +474,10 @@
                 <div class="card-actions">
                   ${s.verified === 0
                     ? `<button class="btn btn-approve" onclick="approve(${s.id})">✓ Approve</button>
+                       <button class="btn btn-edit" onclick="startEdit(${s.id})">✎ Edit</button>
                        <button class="btn btn-reject" onclick="reject(${s.id})">✕ Delete</button>`
-                    : `<span class="approved-label">✓ Approved</span>`
+                    : `<span class="approved-label">✓ Approved</span>
+                       <button class="btn btn-edit" onclick="startEdit(${s.id})">✎ Edit</button>`
                   }
                 </div>
               </div>
@@ -437,6 +504,93 @@
               </div>
             </div>`;
         }).join('');
+      }
+
+      function renderEditForm(s) {
+        return `
+          <div class="submission-card" id="card-${s.id}">
+            <div class="edit-grid">
+              <div class="edit-field">
+                <label>Business Name</label>
+                <input id="edit-name-${s.id}" value="${esc(s.name)}" />
+              </div>
+              <div class="edit-field">
+                <label>Category</label>
+                <input id="edit-category-${s.id}" value="${esc(s.category || '')}" />
+              </div>
+              <div class="edit-field">
+                <label>Address</label>
+                <input id="edit-address-${s.id}" value="${esc(s.address || '')}" />
+              </div>
+              <div class="edit-field">
+                <label>City</label>
+                <input id="edit-city-${s.id}" value="${esc(s.city || '')}" />
+              </div>
+              <div class="edit-field">
+                <label>State</label>
+                <input id="edit-state-${s.id}" value="${esc(s.state || '')}" maxlength="2" />
+              </div>
+              <div class="edit-field">
+                <label>ZIP</label>
+                <input id="edit-zip-${s.id}" value="${esc(s.zip || '')}" maxlength="5" />
+              </div>
+              <div class="edit-field">
+                <label>Age Requirement</label>
+                <input id="edit-age-${s.id}" type="number" value="${esc(s.age_requirement || '')}" />
+              </div>
+            </div>
+            <div class="edit-field" style="margin-bottom:8px">
+              <label>Discount</label>
+              <textarea id="edit-discount-${s.id}">${esc(s.discount || '')}</textarea>
+            </div>
+            <div class="edit-field" style="margin-bottom:12px">
+              <label>Conditions</label>
+              <textarea id="edit-conditions-${s.id}">${esc(s.conditions || '')}</textarea>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-save" onclick="saveEdit(${s.id})">Save</button>
+              <button class="btn btn-cancel" onclick="cancelEdit()">Cancel</button>
+            </div>
+          </div>`;
+      }
+
+      function startEdit(id) {
+        editingId = id;
+        renderSubmissions();
+      }
+
+      function cancelEdit() {
+        editingId = null;
+        renderSubmissions();
+      }
+
+      async function saveEdit(id) {
+        const fields = {
+          name: document.getElementById(`edit-name-${id}`).value.trim(),
+          category: document.getElementById(`edit-category-${id}`).value.trim(),
+          address: document.getElementById(`edit-address-${id}`).value.trim(),
+          city: document.getElementById(`edit-city-${id}`).value.trim(),
+          state: document.getElementById(`edit-state-${id}`).value.trim(),
+          zip: document.getElementById(`edit-zip-${id}`).value.trim(),
+          age_requirement: document.getElementById(`edit-age-${id}`).value.trim(),
+          discount: document.getElementById(`edit-discount-${id}`).value.trim(),
+          conditions: document.getElementById(`edit-conditions-${id}`).value.trim(),
+        };
+
+        const res = await fetch(`/api/admin/edit/${id}`, {
+          method: 'POST',
+          headers: { 'x-admin-password': getPassword(), 'Content-Type': 'application/json' },
+          body: JSON.stringify(fields),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const idx = allSubmissions.findIndex((s) => s.id === id);
+          if (idx !== -1) allSubmissions[idx] = data.submission;
+          editingId = null;
+          renderSubmissions();
+        } else {
+          alert(data.error || 'Failed to save changes.');
+        }
       }
 
       async function approve(id) {

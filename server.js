@@ -5,7 +5,7 @@ const fs = require('fs');
 const Anthropic = require('@anthropic-ai/sdk');
 const rateLimit = require('express-rate-limit');
 
-const { getVerifiedLocalBusinesses, saveLocalBusiness, getAllSubmissions, approveSubmission, rejectSubmission } = require('./database');
+const { getVerifiedLocalBusinesses, saveLocalBusiness, getAllSubmissions, approveSubmission, rejectSubmission, updateSubmission } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -233,6 +233,14 @@ app.post('/api/admin/reject/:id', adminLimiter, (req, res) => {
   const ok = rejectSubmission(req.params.id);
   if (!ok) return res.status(404).json({ ok: false, error: 'Submission not found.' });
   res.json({ ok: true });
+});
+
+// POST /api/admin/edit/:id
+app.post('/api/admin/edit/:id', adminLimiter, (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const updated = updateSubmission(req.params.id, req.body || {});
+  if (!updated) return res.status(404).json({ ok: false, error: 'Submission not found.' });
+  res.json({ ok: true, submission: updated });
 });
 
 // In-memory cache for /api/nearby responses, keyed by zip+category, to avoid

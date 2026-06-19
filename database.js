@@ -78,6 +78,25 @@ function getAllSubmissions() {
   return readSubmissions();
 }
 
+function updateSubmission(id, fields) {
+  const items = readSubmissions();
+  const idx = items.findIndex((item) => String(item.id) === String(id));
+  if (idx === -1) return false;
+
+  const editable = ['name', 'address', 'city', 'state', 'zip', 'category', 'discount', 'conditions'];
+  for (const key of editable) {
+    if (fields[key] !== undefined) {
+      items[idx][key] = String(fields[key]).trim();
+    }
+  }
+  if (fields.age_requirement !== undefined) {
+    items[idx].age_requirement = parseInt(fields.age_requirement) || null;
+  }
+
+  writeSubmissions(items);
+  return items[idx];
+}
+
 function approveSubmission(id) {
   const items = readSubmissions();
   const idx = items.findIndex((item) => String(item.id) === String(id));
@@ -102,4 +121,5 @@ module.exports = {
   getAllSubmissions,
   approveSubmission,
   rejectSubmission,
+  updateSubmission,
 };
