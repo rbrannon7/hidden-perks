@@ -316,6 +316,20 @@ searchForm.addEventListener('submit', (e) => {
   fetchResults(queryInput.value.trim(), categoryFilter.value, zipInput.value.trim());
 });
 
+// Auto-search when a category is chosen or a ZIP is completed — picking a category
+// or finishing a ZIP already feels like a completed action, so don't make the user
+// remember a separate button press for those. Typed names still require the button
+// (or Enter), since searching on every keystroke would be noisy and need debouncing.
+categoryFilter.addEventListener('change', () => {
+  fetchResults(queryInput.value.trim(), categoryFilter.value, zipInput.value.trim());
+});
+
+zipInput.addEventListener('input', () => {
+  if (zipInput.value.replace(/\D/g, '').length === 5) {
+    fetchResults(queryInput.value.trim(), categoryFilter.value, zipInput.value.trim());
+  }
+});
+
 // Initial load — show all
 fetchResults('');
 
