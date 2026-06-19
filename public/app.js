@@ -97,6 +97,9 @@ function renderResults(results, locationLabel = '') {
       ? `<button type="button" class="btn-admin-fetch" data-id="${esc(item.id)}" data-url="${esc(item.sourceUrl || '')}" data-name="${esc(item.name)}">↺ Fetch Details</button>`
       : '';
 
+    const cityStateZip = [[item.city, item.state].filter(Boolean).join(', '), item.zip].filter(Boolean).join(' ');
+    const fullLocation = [item.address, cityStateZip].filter(Boolean).join(', ');
+
     return `
       <article class="result-card${item.featured ? ' result-card--featured' : ''}" id="card-${esc(item.id)}">
         <div class="card-header">
@@ -105,7 +108,7 @@ function renderResults(results, locationLabel = '') {
           ${featuredBadge}
           ${localBadge}
         </div>
-        ${item.address ? `<p class="card-address">📍 ${esc(item.address)}</p>` : `<p class="card-tagline">Ask for this discount when you make a purchase.</p>`}
+        ${fullLocation ? `<p class="card-address">📍 ${esc(fullLocation)}</p>` : `<p class="card-tagline">Ask for this discount when you make a purchase.</p>`}
         <div class="detail-box">
           <p class="detail-label"><b>Discount Details</b></p>
           <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
