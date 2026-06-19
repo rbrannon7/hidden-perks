@@ -18,7 +18,9 @@ const nationalChains = JSON.parse(fs.readFileSync(nationalChainsPath, 'utf8'));
 const parksPath = path.join(__dirname, 'data', 'parks.json');
 const allParks = JSON.parse(fs.readFileSync(parksPath, 'utf8'));
 const nationalParks = allParks.filter((p) => p.subcategory === 'national');
-const stateParks = allParks.filter((p) => p.subcategory === 'state');
+const stateParks = allParks
+  .filter((p) => p.subcategory === 'state')
+  .sort((a, b) => (a.state + a.name).localeCompare(b.state + b.name));
 
 function normalize(value) {
   return String(value || '')
@@ -55,9 +57,14 @@ app.get('/api/search', (req, res) => {
     });
   }
 
-  // State Parks: results come from /api/nearby (requires a ZIP to determine the state)
+  // State Parks: with no ZIP, show all state parks nationwide; with a ZIP, the
+  // frontend calls /api/nearby instead to filter down to that ZIP's state.
   if (category === 'state-parks') {
-    return res.json({ query, zip, results: [] });
+    return res.json({
+      query,
+      zip,
+      results: stateParks.map((p) => ({ ...p, source: 'national' })),
+    });
   }
 
   let results = searchNationalChains(query);

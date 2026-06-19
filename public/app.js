@@ -256,8 +256,8 @@ function fetchResults(query, category = '', zip = '') {
           results = [];
           locationLabel = `No state parks found for ZIP ${zip} — double-check the ZIP and try again`;
         } else {
-          results = [];
-          locationLabel = 'Enter a ZIP code to see State Parks in your state';
+          // No ZIP entered — show all state parks nationwide (already sorted by state)
+          locationLabel = '🌲 Showing all State Parks nationwide — enter a ZIP to narrow to your state';
         }
       } else if (nearbyData?.ok && nearbyData.results?.length) {
         // ZIP search worked — show only nearby locations + local submissions for that ZIP
