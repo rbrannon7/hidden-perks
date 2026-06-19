@@ -6,6 +6,7 @@ const Anthropic = require('@anthropic-ai/sdk');
 const rateLimit = require('express-rate-limit');
 
 const { getVerifiedLocalBusinesses, saveLocalBusiness, getAllSubmissions, approveSubmission, rejectSubmission, updateSubmission } = require('./database');
+const { normalize, textMatches } = require('./search');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -48,23 +49,13 @@ const stateParks = allParks
   .filter((p) => p.subcategory === 'state')
   .sort((a, b) => (a.state + a.name).localeCompare(b.state + b.name));
 
-function normalize(value) {
-  return String(value || '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9 ]/g, '');
-}
-
 function searchNationalChains(query) {
-  const term = normalize(query);
-  if (!term) return nationalChains;
+  if (!query) return nationalChains;
   return nationalChains.filter((item) => {
-    const haystack = normalize(
-      [item.name, item.category, item.discount, item.conditions, item.city, item.state]
-        .filter(Boolean)
-        .join(' ')
-    );
-    return haystack.includes(term);
+    const haystack = [item.name, item.category, item.discount, item.conditions, item.city, item.state]
+      .filter(Boolean)
+      .join(' ');
+    return textMatches(haystack, query);
   });
 }
 

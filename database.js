@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { textMatches } = require('./search');
 
 const dbDir = process.env.DATA_DIR || path.join(__dirname, 'db');
 const submissionsFile = path.join(dbDir, 'submissions.json');
@@ -53,7 +54,6 @@ function saveLocalBusiness(submission) {
 }
 
 function getVerifiedLocalBusinesses(query = '', zip = '') {
-  const term = String(query || '').trim().toLowerCase();
   const zipTerm = String(zip || '').replace(/\D/g, '').slice(0, 5);
   let items = readSubmissions().filter((item) => item.verified === 1);
 
@@ -63,16 +63,15 @@ function getVerifiedLocalBusinesses(query = '', zip = '') {
 
   const toResult = (r) => ({ ...r, source: 'local', ageRequirement: r.age_requirement });
 
-  if (!term) {
+  if (!query) {
     return items.slice(0, 50).map(toResult);
   }
 
   return items.filter((item) => {
     const haystack = [item.name, item.category, item.discount, item.conditions, item.city, item.state]
       .filter(Boolean)
-      .join(' ')
-      .toLowerCase();
-    return haystack.includes(term);
+      .join(' ');
+    return textMatches(haystack, query);
   }).slice(0, 50).map(toResult);
 }
 
