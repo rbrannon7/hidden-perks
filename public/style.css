@@ -12,6 +12,8 @@
 
 * { box-sizing: border-box; }
 
+html { scroll-behavior: smooth; }
+
 body {
   margin: 0;
   font-family: 'Inter', Arial, sans-serif;
@@ -147,6 +149,11 @@ h2 {
 }
 
 .hero-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
   text-align: center;
   padding: 12px 0 6px;
 }
@@ -161,6 +168,21 @@ h2 {
   border-radius: 999px;
   padding: 7px 22px;
   letter-spacing: 0.06em;
+}
+
+.hero-badge-link {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #1a0d40;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.hero-badge-link:hover,
+.hero-badge-link:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(255, 213, 111, 0.35);
 }
 
 .category-select {
@@ -730,6 +752,7 @@ button {
 /* ── Submission panel ── */
 .submit-panel {
   margin-top: 4px;
+  scroll-margin-top: 16px;
 }
 
 .submit-copy h2 {
