@@ -7,3 +7,9 @@ services:
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: DATA_DIR
+        value: /var/data
+    disk:
+      name: hiddenperks-data
+      mountPath: /var/data
+      sizeGB: 1

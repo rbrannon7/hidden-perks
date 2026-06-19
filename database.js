@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const dbDir = path.join(__dirname, 'db');
+const dbDir = process.env.DATA_DIR || path.join(__dirname, 'db');
 const submissionsFile = path.join(dbDir, 'submissions.json');
 
 function ensureStorage() {
