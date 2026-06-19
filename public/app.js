@@ -236,8 +236,8 @@ function fetchResults(query, category = '', zip = '') {
     .then((r) => r.json())
     .catch(() => ({ results: [] }));
 
-  // National Parks are nationwide and never depend on ZIP — no need to hit /api/nearby
-  const nearbySearch = zip.length === 5 && category !== 'national-parks'
+  // National Parks and Online Businesses are nationwide and never depend on ZIP — no need to hit /api/nearby
+  const nearbySearch = zip.length === 5 && category !== 'national-parks' && category !== 'online'
     ? fetch(`/api/nearby?${new URLSearchParams({ zip, ...(category && { category }) })}`)
         .then((r) => r.json())
         .catch(() => null)
@@ -250,6 +250,8 @@ function fetchResults(query, category = '', zip = '') {
 
       if (category === 'national-parks') {
         locationLabel = '🏔️ Showing all National Parks nationwide';
+      } else if (category === 'online') {
+        locationLabel = '💻 Showing all Online Businesses nationwide';
       } else if (category === 'state-parks') {
         if (nearbyData?.ok && nearbyData.results?.length) {
           results = nearbyData.results;
