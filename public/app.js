@@ -280,13 +280,14 @@ function fetchResults(query, category = '', zip = '') {
         const city = nearbyData.city ? `${nearbyData.city} ` : '';
         locationLabel = `📍 Showing locations near ${city}ZIP ${nearbyData.zip}`;
       } else if (nearbyData?.ok) {
-        // Places lookup worked but nothing matched (e.g. the typed name has no nearby
-        // location) — still show any local submissions for this ZIP that matched
-        results = results.filter((r) => r.source === 'local');
+        // Places lookup worked but couldn't confirm a nearby location (e.g. Google
+        // Places didn't index it, or there isn't one near this ZIP) — fall back to
+        // the national chain / local entries already matched by name and category,
+        // rather than discarding them.
         const city = nearbyData.city ? `${nearbyData.city} ` : '';
         locationLabel = query
-          ? `No matches for "${query}" near ${city}ZIP ${zip}`
-          : `No nearby matches found for ZIP ${zip}`;
+          ? `Couldn't confirm a nearby location for "${query}" near ${city}ZIP ${zip} — showing general discount info`
+          : `No specific nearby matches found for ZIP ${zip} — showing all national chains`;
       } else if (zip.length === 5) {
         // ZIP entered but Places API unavailable — show all national chains
         locationLabel = `Showing all national chains — location search unavailable for ZIP ${zip}`;
