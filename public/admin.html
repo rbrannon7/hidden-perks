@@ -149,7 +149,7 @@
       }
 
       .btn-save {
-        background: linear-gradient(135deg, #66e2cf, #3db9a8);
+        background: linear-gradient(135deg, #ffd56f, #ffb830);
         color: #1a0d40;
         font-weight: 900;
         padding: 10px 18px;
@@ -186,7 +186,10 @@
       }
 
       .edit-field input,
+      .edit-field select,
       .edit-field textarea {
+        width: 100%;
+        min-width: 0;
         background: rgba(255, 255, 255, 0.06);
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 10px;
@@ -386,6 +389,24 @@
           .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       }
 
+      const CATEGORIES = [
+        ['restaurant', 'Restaurant'],
+        ['retail', 'Retail & Shopping'],
+        ['pharmacy', 'Pharmacy'],
+        ['grocery', 'Grocery'],
+        ['entertainment', 'Entertainment'],
+        ['travel', 'Travel & Hotels'],
+        ['online', 'Online Businesses'],
+      ];
+
+      function categoryOptionsHtml(selected) {
+        const options = [`<option value="">Select a category</option>`];
+        for (const [value, label] of CATEGORIES) {
+          options.push(`<option value="${esc(value)}"${value === selected ? ' selected' : ''}>${esc(label)}</option>`);
+        }
+        return options.join('');
+      }
+
       function getPassword() { return sessionStorage.getItem('hp_admin_pw') || ''; }
 
       function login() {
@@ -521,7 +542,7 @@
               </div>
               <div class="edit-field">
                 <label>Category</label>
-                <input id="edit-category-${s.id}" value="${esc(s.category || '')}" />
+                <select id="edit-category-${s.id}">${categoryOptionsHtml(s.category || '')}</select>
               </div>
             </div>
             <div class="edit-grid">
