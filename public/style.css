@@ -881,3 +881,14 @@ button {
   }
 }
 
+.site-footer {
+  text-align: center;
+  padding: 24px 0 4px;
+}
+
+.site-footer a {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
