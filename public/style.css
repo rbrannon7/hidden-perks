@@ -336,13 +336,6 @@ button {
   white-space: nowrap;
 }
 
-.card-tagline {
-  margin: 2px 0 4px;
-  font-size: 0.92rem;
-  font-style: italic;
-  color: var(--muted);
-}
-
 .discount-disclaimer {
   margin: 4px 0 14px;
   font-size: 0.88rem;

@@ -114,7 +114,7 @@ function renderResults(results, locationLabel = '') {
           ${featuredBadge}
           ${localBadge}
         </div>
-        ${fullLocation ? `<p class="card-address">📍 ${esc(fullLocation)}</p>` : `<p class="card-tagline">Ask for this discount when you make a purchase.</p>`}
+        ${fullLocation ? `<p class="card-address">📍 ${esc(fullLocation)}</p>` : ''}
         <div class="detail-box">
           <p class="detail-label"><b>Discount Details</b></p>
           <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
