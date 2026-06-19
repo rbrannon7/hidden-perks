@@ -816,14 +816,15 @@ button {
 .submit-label select,
 .submit-label textarea {
   width: 100%;
+  font-weight: 400;
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, var(--mint), #3db9a8);
+  background: linear-gradient(135deg, #ffd56f, #ffb830);
   color: #1a0d40;
   font-weight: 900;
-  font-size: 1.05rem;
-  padding: 16px 28px;
+  font-size: 1rem;
+  padding: 12px 32px;
   justify-self: start;
   border-radius: 999px;
 }
