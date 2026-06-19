@@ -46,13 +46,18 @@ app.get('/api/search', (req, res) => {
   const category = req.query.category || '';
   const zip = (req.query.zip || '').replace(/\D/g, '').slice(0, 5);
 
-  // Parks category: always return all national parks from parks.json
-  if (category === 'parks') {
+  // National Parks: always return all national parks nationwide, regardless of ZIP
+  if (category === 'national-parks') {
     return res.json({
       query,
       zip,
       results: nationalParks.map((p) => ({ ...p, source: 'national' })),
     });
+  }
+
+  // State Parks: results come from /api/nearby (requires a ZIP to determine the state)
+  if (category === 'state-parks') {
+    return res.json({ query, zip, results: [] });
   }
 
   let results = searchNationalChains(query);
@@ -211,6 +216,11 @@ app.get('/api/nearby', async (req, res) => {
     return res.status(400).json({ ok: false, error: 'Enter a valid 5-digit ZIP code.' });
   }
 
+  // National Parks are nationwide and never ZIP-dependent — nothing to look up here
+  if (category === 'national-parks') {
+    return res.json({ ok: true, zip, results: [] });
+  }
+
   const cacheKey = `${zip}:${category}`;
   const cached = nearbyCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < NEARBY_CACHE_TTL_MS) {
@@ -241,8 +251,8 @@ app.get('/api/nearby', async (req, res) => {
     const stateComp = addrComps.find((c) => c.types.includes('administrative_area_level_1'));
     const stateCode = stateComp?.short_name || '';
 
-    // Parks: skip Google Places entirely; filter parks.json by state
-    if (category === 'parks') {
+    // State Parks: skip Google Places entirely; filter parks.json by state
+    if (category === 'state-parks') {
       const nearby = stateParks
         .filter((p) => p.state === stateCode)
         .map((p) => ({ ...p, source: 'nearby', nearZip: zip, nearCity: cityName, nearState: stateCode }));
