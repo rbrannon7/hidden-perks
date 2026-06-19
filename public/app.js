@@ -24,6 +24,15 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+// Conditions text can mark promo codes with **double asterisks** so they stand out.
+function stripBold(s) {
+  return String(s == null ? '' : s).replace(/\*\*(.+?)\*\*/g, '$1');
+}
+
+function formatConditions(s) {
+  return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+
 function buildScript(name, discount, ageReq, conditions) {
   const age = ageReq ? `${ageReq}+` : 'Ask at location';
   const lines = [
@@ -31,7 +40,7 @@ function buildScript(name, discount, ageReq, conditions) {
     ``,
     `Discount: ${discount || 'Ask at the register'}`,
     `Age Required: ${age}`,
-    `Conditions: ${conditions || 'Ask at the register for current terms'}`,
+    `Conditions: ${stripBold(conditions) || 'Ask at the register for current terms'}`,
   ];
   return lines.join('\n');
 }
@@ -115,7 +124,7 @@ function renderResults(results, locationLabel = '') {
         </div>
         <div class="detail-box">
           <p class="detail-label"><b>Conditions</b></p>
-          <p class="detail-value">${esc(conditions)}</p>
+          <p class="detail-value">${formatConditions(conditions)}</p>
         </div>
         ${verifiedLine}
         <div id="admin-preview-${esc(item.id)}" class="admin-preview" hidden></div>
