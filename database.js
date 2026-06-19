@@ -61,8 +61,10 @@ function getVerifiedLocalBusinesses(query = '', zip = '') {
     items = items.filter((item) => item.zip === zipTerm);
   }
 
+  const toResult = (r) => ({ ...r, source: 'local', ageRequirement: r.age_requirement });
+
   if (!term) {
-    return items.slice(0, 50).map((r) => ({ ...r, source: 'local' }));
+    return items.slice(0, 50).map(toResult);
   }
 
   return items.filter((item) => {
@@ -71,7 +73,7 @@ function getVerifiedLocalBusinesses(query = '', zip = '') {
       .join(' ')
       .toLowerCase();
     return haystack.includes(term);
-  }).slice(0, 50).map((r) => ({ ...r, source: 'local' }));
+  }).slice(0, 50).map(toResult);
 }
 
 function getAllSubmissions() {
