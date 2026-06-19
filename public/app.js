@@ -266,9 +266,16 @@ function fetchResults(query, category = '', zip = '') {
           results = nearbyData.results;
           const stateName = nearbyData.state || '';
           locationLabel = `🌲 Showing all ${stateName} State Parks`;
+        } else if (nearbyData?.ok) {
+          // ZIP resolved to a state fine, but no park there matched the typed name
+          results = [];
+          const stateName = nearbyData.state || 'this state';
+          locationLabel = query
+            ? `No state parks matching "${query}" found in ${stateName}`
+            : `No state parks found for ${stateName}`;
         } else if (zip.length === 5) {
           results = [];
-          locationLabel = `No state parks found for ZIP ${zip} — double-check the ZIP and try again`;
+          locationLabel = `Couldn't find state parks for ZIP ${zip} — double-check the ZIP and try again`;
         } else {
           // No ZIP entered — show all state parks nationwide (already sorted by state)
           locationLabel = '🌲 Showing all State Parks nationwide — enter a ZIP to narrow to your state';
