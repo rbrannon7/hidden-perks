@@ -114,10 +114,7 @@
               </select>
             </label>
           </div>
-          <label class="submit-label">Discount Description *
-            <input id="submitDiscount" type="text" placeholder="e.g. 10% off every Tuesday for customers 60 and older" />
-          </label>
-          <div class="submit-row-3">
+          <div class="submit-row-4">
             <label class="submit-label">City
               <input id="submitCity" type="text" placeholder="City" autocomplete="address-level2" />
             </label>
@@ -127,15 +124,16 @@
             <label class="submit-label">ZIP Code
               <input id="submitZip" type="text" inputmode="numeric" placeholder="84321" maxlength="5" pattern="[0-9]{5}" autocomplete="postal-code" />
             </label>
-          </div>
-          <div class="submit-row-2">
             <label class="submit-label">Age Requirement
               <input id="submitAge" type="number" placeholder="e.g. 55" min="50" max="75" />
             </label>
-            <label class="submit-label">Conditions / Notes
-              <input id="submitConditions" type="text" placeholder="e.g. Dine-in only, must show ID" />
-            </label>
           </div>
+          <label class="submit-label">Discount Description *
+            <textarea id="submitDiscount" rows="4" placeholder="e.g. 10% off every Tuesday for customers 60 and older"></textarea>
+          </label>
+          <label class="submit-label">Conditions / Notes
+            <textarea id="submitConditions" rows="4" placeholder="e.g. Dine-in only, must show ID"></textarea>
+          </label>
           <label class="submit-label">Your Email <span class="submit-optional">(optional — only if you'd like a follow-up)</span>
             <input id="submitEmail" type="email" placeholder="you@example.com" autocomplete="email" />
           </label>

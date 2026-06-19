@@ -216,7 +216,8 @@ h2 {
   font-size: 1.08rem;
 }
 
-input {
+input,
+textarea {
   border: 1px solid rgba(255,255,255,0.14);
   border-radius: 18px;
   padding: 16px 18px;
@@ -226,7 +227,13 @@ input {
   color: #ffffff;
 }
 
-input::placeholder { color: #dfe8f4; }
+textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+
+input::placeholder,
+textarea::placeholder { color: #dfe8f4; }
 
 button {
   border: none;
@@ -785,6 +792,12 @@ button {
   gap: 12px;
 }
 
+.submit-row-4 {
+  display: grid;
+  grid-template-columns: 1fr 80px 110px 130px;
+  gap: 12px;
+}
+
 .submit-label {
   display: grid;
   gap: 6px;
@@ -800,7 +813,8 @@ button {
 }
 
 .submit-label input,
-.submit-label select {
+.submit-label select,
+.submit-label textarea {
   width: 100%;
 }
 
@@ -879,7 +893,8 @@ button {
     font-size: 1rem;
   }
 
-  input {
+  input,
+  textarea {
     font-size: 1.02rem;
     padding: 14px 13px;
   }
@@ -902,6 +917,10 @@ button {
 
   .submit-row-3 > :last-child {
     grid-column: 1 / -1;
+  }
+
+  .submit-row-4 {
+    grid-template-columns: 1fr 1fr;
   }
 
   .btn-submit {
