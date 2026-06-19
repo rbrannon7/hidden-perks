@@ -116,7 +116,6 @@ function renderResults(results, locationLabel = '') {
         ${fullLocation ? `<p class="card-address">📍 ${esc(fullLocation)}</p>` : `<p class="card-tagline">Ask for this discount when you make a purchase.</p>`}
         <div class="detail-box">
           <p class="detail-label"><b>Discount Details</b></p>
-          <p class="discount-disclaimer">Discount terms may change — please confirm with the business.</p>
           <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
         </div>
         <div class="detail-box">
