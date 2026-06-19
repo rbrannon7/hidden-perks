@@ -191,6 +191,21 @@ Suggested order:
 
 ---
 
+## AARP Affiliate Program (Pending Approval)
+
+Rob applied to the AARP – US Affiliate Program through FlexOffers (flat $24 payout per AARP membership sale). Status as of application: pending approval. Once approved, implement the affiliate link as follows:
+
+**Why this fits:** Many entries in the `online` category (and a few `travel` car rental entries — Avis, Hertz, Enterprise, National, Alamo) already require AARP membership to redeem. Surfacing an affiliate signup link on exactly those cards turns a dead-end ("you need AARP for this") into a monetizable action, on an audience that's already a great fit for AARP.
+
+**Implementation plan (small, contained change):**
+1. **Centralize the link** — store the FlexOffers tracking URL as a single constant in `app.js` (e.g. `AARP_AFFILIATE_URL`), not hardcoded into JSON entries. Affiliate links can change; one edit point beats hunting through `data/national-chains.json`.
+2. **Add a real data field, not string-matching** — add `requiresAarp: true` to the ~15–20 entries that need AARP (the `online` category ones already say "AARP membership required:" in their conditions, plus the car rental entries). Don't have the render logic parse the conditions string — that's brittle if wording ever changes. Mirrors the existing `ageRequirement`/`national` field pattern.
+3. **Show a real button, not an inline link** — add a secondary button next to "Share Discount" (e.g. "Join AARP") that only renders when `item.requiresAarp` is true. Matches the large-tap-target UX principle for 55+ users better than a small inline text link.
+4. **One sitewide FTC disclosure, not per-card** — a short "(affiliate link)" note near the button is enough per-card; add one clear disclosure statement sitewide (footer or About section) to cover FTC affiliate marketing requirements.
+5. **Track clicks via GoatCounter** (already wired into `public/index.html`) — tag the "Join AARP" button with a click event to measure conversion funnel before expanding the affiliate angle further.
+
+---
+
 ## Rob's Development Context
 
 - **Stack familiarity:** Rob has built Node.js + Express backends before (Aqua Realms card game with WebSocket multiplayer on Render)
