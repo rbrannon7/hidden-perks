@@ -732,6 +732,12 @@ button {
   margin-top: 4px;
 }
 
+.submit-copy h2 {
+  font-size: 1.5rem;
+  color: var(--gold);
+  font-weight: 900;
+}
+
 .submit-copy p {
   color: var(--muted);
   margin: 6px 0 18px;
