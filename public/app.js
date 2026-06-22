@@ -46,6 +46,31 @@ function buildScript(name, discount, ageReq, conditions) {
   return lines.join('\n');
 }
 
+// Structured markup for the full-screen cashier view — same info as buildScript(),
+// laid out as labeled fields instead of a run-on paragraph so it reads at a glance.
+function buildShowHTML(name, discount, ageReq, conditions) {
+  const age = ageReq ? `${ageReq}+` : 'Ask at location';
+  return `
+    <h3 class="show-name">${esc(name)}</h3>
+    <p class="show-tag">Senior Discount</p>
+    <dl class="show-fields">
+      <div class="show-field">
+        <dt>Discount</dt>
+        <dd>${esc(discount || 'Ask at the register')}</dd>
+      </div>
+      <div class="show-field">
+        <dt>Age Required</dt>
+        <dd>${esc(age)}</dd>
+      </div>
+      <div class="show-field">
+        <dt>Conditions</dt>
+        <dd>${formatConditions(conditions || 'Ask at the register for current terms')}</dd>
+      </div>
+    </dl>
+    <p class="show-disclaimer">Terms may vary — please confirm with staff.</p>
+  `;
+}
+
 // === Render result cards ===
 function renderResults(results, locationLabel = '') {
   resultCount.textContent = `${results.length} result${results.length === 1 ? '' : 's'}`;
@@ -147,7 +172,10 @@ function renderResults(results, locationLabel = '') {
 }
 
 // === Ask For Me modal ===
+let currentAsk = null;
+
 function openAskModal(name, discount, ageReq, conditions) {
+  currentAsk = { name, discount, ageReq, conditions };
   askScript.textContent = buildScript(name, discount, ageReq, conditions);
   askModal.hidden = false;
   document.body.style.overflow = 'hidden';
@@ -173,7 +201,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.getElementById('btnShow').addEventListener('click', () => {
-  showScript.textContent = askScript.textContent;
+  showScript.innerHTML = buildShowHTML(currentAsk.name, currentAsk.discount, currentAsk.ageReq, currentAsk.conditions);
   askModal.hidden = true;
   showMode.hidden = false;
   document.getElementById('closeShow').focus();
