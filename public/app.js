@@ -167,7 +167,7 @@ askModal.addEventListener('click', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    if (!showMode.hidden) { showMode.hidden = true; return; }
+    if (!showMode.hidden) { closeShowMode(); return; }
     if (!askModal.hidden) { closeAskModal(); }
   }
 });
@@ -179,9 +179,12 @@ document.getElementById('btnShow').addEventListener('click', () => {
   document.getElementById('closeShow').focus();
 });
 
-document.getElementById('closeShow').addEventListener('click', () => {
+function closeShowMode() {
   showMode.hidden = true;
-});
+  document.body.style.overflow = '';
+}
+
+document.getElementById('closeShow').addEventListener('click', closeShowMode);
 
 document.getElementById('btnCopy').addEventListener('click', () => {
   navigator.clipboard.writeText(askScript.textContent).then(() => {
