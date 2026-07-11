@@ -771,6 +771,36 @@ button {
   letter-spacing: 0.04em;
 }
 
+.education-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(130, 150, 255, 0.15);
+  border: 1px solid rgba(130, 150, 255, 0.45);
+  color: #9aa8ff;
+  font-size: 0.82rem;
+  font-weight: 900;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+
+/* ── "Also Available in Your State" callout (Education / State Parks folded
+   into a plain ZIP search) — visually separated from the main results so it
+   never reads as just another nearby storefront ── */
+.also-nearby-section {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.also-nearby-heading {
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--gold);
+}
+
 /* ── Nearby badge (Google Places results) ── */
 .nearby-badge {
   display: inline-flex;

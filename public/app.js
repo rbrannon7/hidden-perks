@@ -3,6 +3,9 @@ const IS_ADMIN = localStorage.getItem('hp_admin') === '1';
 
 // === DOM refs ===
 const resultsList = document.getElementById('resultsList');
+const alsoNearbySection = document.getElementById('alsoNearbySection');
+const alsoNearbyList = document.getElementById('alsoNearbyList');
+const alsoNearbyHeading = document.getElementById('alsoNearbyHeading');
 const resultCount = document.getElementById('resultCount');
 const searchForm = document.getElementById('searchForm');
 const queryInput = document.getElementById('queryInput');
@@ -94,81 +97,118 @@ function renderResults(results, locationLabel = '') {
         <h3>No results found</h3>
         <p class="result-meta">Try a business name like Denny's, Kohl's, CVS, or choose a category above.</p>
       </article>`;
+    renderAlsoNearby([]);
     return;
   }
 
   // Featured sponsors always appear first
   results.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
 
-  resultsList.innerHTML = results.map((item) => {
-    const conditions = item.conditions || 'Ask at the register for current terms';
-    const officialUrl = item.sourceUrl
-      ? item.sourceUrl
-      : `https://www.google.com/search?q=${encodeURIComponent(item.name + ' senior discount')}`;
+  resultsList.innerHTML = results.map(buildResultCardHTML).join('');
+  bindCardEvents(resultsList);
+}
 
-    const ageBadge = item.ageRequirement
-      ? `<span class="age-badge">${item.ageRequirement}+</span>`
-      : '';
+// Builds the HTML for a single result card. Shared by the main results grid
+// and the "Also Available in Your State" callout so both stay visually and
+// behaviorally identical.
+function buildResultCardHTML(item) {
+  const conditions = item.conditions || 'Ask at the register for current terms';
+  const officialUrl = item.sourceUrl
+    ? item.sourceUrl
+    : `https://www.google.com/search?q=${encodeURIComponent(item.name + ' senior discount')}`;
 
-    const featuredBadge = item.featured
-      ? `<span class="featured-badge"><span class="featured-star">★</span> Featured</span>`
-      : '';
+  const ageBadge = item.ageRequirement
+    ? `<span class="age-badge">${item.ageRequirement}+</span>`
+    : '';
 
-    const localBadge = item.source === 'local'
-      ? `<span class="local-badge">Local</span>`
-      : item.subcategory === 'national' && item.category === 'parks'
-        ? `<span class="national-park-badge">🏔️ National Park</span>`
-        : item.subcategory === 'state' && item.category === 'parks'
-          ? `<span class="state-park-badge">🌲 State Park</span>`
+  const featuredBadge = item.featured
+    ? `<span class="featured-badge"><span class="featured-star">★</span> Featured</span>`
+    : '';
+
+  const localBadge = item.source === 'local'
+    ? `<span class="local-badge">Local</span>`
+    : item.subcategory === 'national' && item.category === 'parks'
+      ? `<span class="national-park-badge">🏔️ National Park</span>`
+      : item.subcategory === 'state' && item.category === 'parks'
+        ? `<span class="state-park-badge">🌲 State Park</span>`
+        : item.category === 'education'
+          ? `<span class="education-badge">🎓 Education</span>`
           : item.source === 'nearby'
             ? `<span class="nearby-badge">📍 Near You</span>`
             : '';
 
-    const adminBtn = IS_ADMIN
-      ? `<button type="button" class="btn-admin-fetch" data-id="${esc(item.id)}" data-url="${esc(item.sourceUrl || '')}" data-name="${esc(item.name)}">↺ Fetch Details</button>`
-      : '';
+  const adminBtn = IS_ADMIN
+    ? `<button type="button" class="btn-admin-fetch" data-id="${esc(item.id)}" data-url="${esc(item.sourceUrl || '')}" data-name="${esc(item.name)}">↺ Fetch Details</button>`
+    : '';
 
-    const cityStateZip = [[item.city, item.state].filter(Boolean).join(', '), item.zip].filter(Boolean).join(' ');
-    const fullLocation = [item.address, cityStateZip].filter(Boolean).join(', ');
+  const cityStateZip = [[item.city, item.state].filter(Boolean).join(', '), item.zip].filter(Boolean).join(' ');
+  const fullLocation = [item.address, cityStateZip].filter(Boolean).join(', ');
 
-    return `
-      <article class="result-card${item.featured ? ' result-card--featured' : ''}" id="card-${esc(item.id)}">
-        <div class="card-header">
-          <h3>${esc(item.name)}</h3>
-          ${ageBadge}
-          ${featuredBadge}
-          ${localBadge}
-        </div>
-        ${fullLocation ? `<p class="card-address">📍 ${esc(fullLocation)}</p>` : ''}
-        <div class="detail-box">
-          <p class="detail-label"><b>Discount Details</b></p>
-          <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
-        </div>
-        <div class="detail-box">
-          <p class="detail-label"><b>Conditions</b></p>
-          <p class="detail-value">${formatConditions(conditions)}</p>
-        </div>
-        <div id="admin-preview-${esc(item.id)}" class="admin-preview" hidden></div>
-        <div class="result-actions">
-          <button type="button" class="btn-ask"
-            data-name="${esc(item.name)}"
-            data-discount="${esc(item.discount || '')}"
-            data-age="${esc(String(item.ageRequirement || ''))}"
-            data-conditions="${esc(conditions)}">Share Discount</button>
-          ${adminBtn}
-        </div>
-      </article>`;
-  }).join('');
+  return `
+    <article class="result-card${item.featured ? ' result-card--featured' : ''}" id="card-${esc(item.id)}">
+      <div class="card-header">
+        <h3>${esc(item.name)}</h3>
+        ${ageBadge}
+        ${featuredBadge}
+        ${localBadge}
+      </div>
+      ${fullLocation ? `<p class="card-address">📍 ${esc(fullLocation)}</p>` : ''}
+      <div class="detail-box">
+        <p class="detail-label"><b>Discount Details</b></p>
+        <p class="detail-value">${esc(item.discount || 'Ask at the register')}</p>
+      </div>
+      <div class="detail-box">
+        <p class="detail-label"><b>Conditions</b></p>
+        <p class="detail-value">${formatConditions(conditions)}</p>
+      </div>
+      <div id="admin-preview-${esc(item.id)}" class="admin-preview" hidden></div>
+      <div class="result-actions">
+        <button type="button" class="btn-ask"
+          data-name="${esc(item.name)}"
+          data-discount="${esc(item.discount || '')}"
+          data-age="${esc(String(item.ageRequirement || ''))}"
+          data-conditions="${esc(conditions)}">Share Discount</button>
+        ${adminBtn}
+      </div>
+    </article>`;
+}
 
-  document.querySelectorAll('.btn-ask').forEach((btn) => {
+// Binds Share Discount / admin Fetch Details handlers for cards within a
+// specific container, scoped so re-rendering one section never re-binds
+// (and double-fires) listeners already attached in another section.
+function bindCardEvents(container) {
+  container.querySelectorAll('.btn-ask').forEach((btn) => {
     btn.addEventListener('click', () => openAskModal(btn.dataset.name, btn.dataset.discount, btn.dataset.age, btn.dataset.conditions));
   });
 
   if (IS_ADMIN) {
-    document.querySelectorAll('.btn-admin-fetch').forEach((btn) => {
+    container.querySelectorAll('.btn-admin-fetch').forEach((btn) => {
       btn.addEventListener('click', () => fetchAdminDetails(btn.dataset.id, btn.dataset.url, btn.dataset.name));
     });
   }
+}
+
+// === "Also Available in Your State" callout ===
+// Shown only for a plain ZIP search (no category picked) — folds in that
+// state's Education and State Park entries alongside the main nearby-business
+// results, without mixing them indistinguishably into the same list.
+function renderAlsoNearby(items, stateCode = '') {
+  if (!alsoNearbySection || !alsoNearbyList) return;
+
+  if (!items.length) {
+    alsoNearbySection.hidden = true;
+    alsoNearbyList.innerHTML = '';
+    return;
+  }
+
+  if (alsoNearbyHeading) {
+    alsoNearbyHeading.textContent = stateCode
+      ? `📚 Also Available in ${stateCode}`
+      : '📚 Also Available in Your State';
+  }
+  alsoNearbyList.innerHTML = items.map(buildResultCardHTML).join('');
+  bindCardEvents(alsoNearbyList);
+  alsoNearbySection.hidden = false;
 }
 
 // === Ask For Me modal ===
@@ -279,8 +319,22 @@ function fetchResults(query, category = '', zip = '') {
         .catch(() => null)
     : Promise.resolve(null);
 
-  Promise.all([baseSearch, nearbySearch])
-    .then(([searchData, nearbyData]) => {
+  // "Also Available in Your State" callout: only for a plain ZIP search with
+  // no category picked — Education and State Park entries are statewide
+  // programs, not physical places, so they'd never surface from the generic
+  // nearby-business lookup above. Fetching their own category-specific
+  // /api/nearby (same endpoint State Parks/Education already use when picked
+  // directly) reuses the existing state-matching logic and server cache.
+  const showCallout = !category && zip.length === 5;
+  const calloutSearch = showCallout
+    ? Promise.all([
+        fetch(`/api/nearby?${new URLSearchParams({ zip, category: 'education' })}`).then((r) => r.json()).catch(() => null),
+        fetch(`/api/nearby?${new URLSearchParams({ zip, category: 'state-parks' })}`).then((r) => r.json()).catch(() => null),
+      ])
+    : Promise.resolve([null, null]);
+
+  Promise.all([baseSearch, nearbySearch, calloutSearch])
+    .then(([searchData, nearbyData, [eduData, parkData]]) => {
       let results = searchData.results || [];
       let locationLabel = '';
 
@@ -347,6 +401,12 @@ function fetchResults(query, category = '', zip = '') {
       }
 
       renderResults(results, locationLabel);
+
+      const calloutItems = [
+        ...(eduData?.ok ? eduData.results || [] : []),
+        ...(parkData?.ok ? parkData.results || [] : []),
+      ];
+      renderAlsoNearby(calloutItems, eduData?.state || parkData?.state || '');
     })
     .catch(() => {
       resultsList.innerHTML = `
@@ -354,6 +414,7 @@ function fetchResults(query, category = '', zip = '') {
           <h3>Search unavailable</h3>
           <p class="result-meta">Make sure the server is running with npm start, then try again.</p>
         </article>`;
+      renderAlsoNearby([]);
     });
 }
 
