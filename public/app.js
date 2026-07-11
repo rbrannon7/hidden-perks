@@ -133,9 +133,11 @@ function buildResultCardHTML(item) {
         ? `<span class="state-park-badge">🌲 State Park</span>`
         : item.category === 'education'
           ? `<span class="education-badge">🎓 Education</span>`
-          : item.source === 'nearby'
-            ? `<span class="nearby-badge">📍 Near You</span>`
-            : '';
+          : item.category === 'ski-resorts'
+            ? `<span class="ski-resort-badge">❄️ Ski Resort</span>`
+            : item.source === 'nearby'
+              ? `<span class="nearby-badge">📍 Near You</span>`
+              : '';
 
   const adminBtn = IS_ADMIN
     ? `<button type="button" class="btn-admin-fetch" data-id="${esc(item.id)}" data-url="${esc(item.sourceUrl || '')}" data-name="${esc(item.name)}">↺ Fetch Details</button>`
@@ -330,11 +332,12 @@ function fetchResults(query, category = '', zip = '') {
     ? Promise.all([
         fetch(`/api/nearby?${new URLSearchParams({ zip, category: 'education' })}`).then((r) => r.json()).catch(() => null),
         fetch(`/api/nearby?${new URLSearchParams({ zip, category: 'state-parks' })}`).then((r) => r.json()).catch(() => null),
+        fetch(`/api/nearby?${new URLSearchParams({ zip, category: 'ski-resorts' })}`).then((r) => r.json()).catch(() => null),
       ])
-    : Promise.resolve([null, null]);
+    : Promise.resolve([null, null, null]);
 
   Promise.all([baseSearch, nearbySearch, calloutSearch])
-    .then(([searchData, nearbyData, [eduData, parkData]]) => {
+    .then(([searchData, nearbyData, [eduData, parkData, resortData]]) => {
       let results = searchData.results || [];
       let locationLabel = '';
 
@@ -380,6 +383,25 @@ function fetchResults(query, category = '', zip = '') {
           // No ZIP entered — show all education discounts nationwide
           locationLabel = '🎓 Showing all Education discounts nationwide — enter a ZIP to narrow to your state';
         }
+      } else if (category === 'ski-resorts') {
+        if (nearbyData?.ok && nearbyData.results?.length) {
+          results = nearbyData.results;
+          const stateName = nearbyData.state || '';
+          locationLabel = `❄️ Showing senior ski resort discounts for ${stateName}`;
+        } else if (nearbyData?.ok) {
+          // ZIP resolved to a state fine, but no ski resort discount there yet
+          results = [];
+          const stateName = nearbyData.state || 'this state';
+          locationLabel = query
+            ? `No ski resort discounts matching "${query}" found for ${stateName}`
+            : `No senior ski resort discounts found for ${stateName} yet`;
+        } else if (zip.length === 5) {
+          results = [];
+          locationLabel = `Couldn't find ski resort discounts for ZIP ${zip} — double-check the ZIP and try again`;
+        } else {
+          // No ZIP entered — show all ski resort discounts nationwide
+          locationLabel = '❄️ Showing all Ski Resort discounts nationwide — enter a ZIP to narrow to your state';
+        }
       } else if (nearbyData?.ok && nearbyData.results?.length) {
         // ZIP search worked — show only nearby locations + local submissions for that ZIP
         const localResults = results.filter((r) => r.source === 'local');
@@ -405,8 +427,9 @@ function fetchResults(query, category = '', zip = '') {
       const calloutItems = [
         ...(eduData?.ok ? eduData.results || [] : []),
         ...(parkData?.ok ? parkData.results || [] : []),
+        ...(resortData?.ok ? resortData.results || [] : []),
       ];
-      renderAlsoNearby(calloutItems, eduData?.state || parkData?.state || '');
+      renderAlsoNearby(calloutItems, eduData?.state || parkData?.state || resortData?.state || '');
     })
     .catch(() => {
       resultsList.innerHTML = `

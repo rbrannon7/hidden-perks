@@ -327,6 +327,18 @@ app.get('/api/nearby', nearbyLimiter, async (req, res) => {
       return res.json(filterByQuery(data));
     }
 
+    // Ski Resorts: these are destinations people travel to, not "near me" in
+    // the 20-mile-radius sense Google Places nearby search is built for — skip
+    // Places entirely and show all resorts in the ZIP's state instead.
+    if (category === 'ski-resorts') {
+      const nearby = nationalChains
+        .filter((item) => item.category === 'ski-resorts' && item.state === stateCode)
+        .map((item) => ({ ...item, source: 'nearby', nearZip: zip, nearCity: cityName, nearState: stateCode }));
+      const data = { ok: true, zip, city: cityName, state: stateCode, lat, lng, results: nearby };
+      nearbyCache.set(cacheKey, { timestamp: Date.now(), data });
+      return res.json(filterByQuery(data));
+    }
+
     // Step 2: nearby search
     // Entertainment uses a wider 50-mile radius; all other categories use 20 miles
     const radius = category === 'entertainment' ? 80467 : 32000;
