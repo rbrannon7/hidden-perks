@@ -206,6 +206,14 @@ Rob applied to the AARP – US Affiliate Program through FlexOffers (flat $24 pa
 
 ---
 
+## Working Autonomy
+
+Rob has given standing authorization to run commands (git commit, git push, npm install, file edits, running the dev server, background agents, etc.) without stopping to ask "may I proceed?" first, as long as the action is within the scope of what Rob has already asked for. Do not pause for confirmation on routine steps of an in-progress task.
+
+Still confirm first for genuinely high-risk/destructive actions: force-push, `git reset --hard`, deleting files/branches, dropping database tables/data, or anything else that's hard to reverse or affects shared state beyond this repo.
+
+---
+
 ## Rob's Development Context
 
 - **Stack familiarity:** Rob has built Node.js + Express backends before (Aqua Realms card game with WebSocket multiplayer on Render)
