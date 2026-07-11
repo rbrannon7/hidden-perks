@@ -1,5 +1,8 @@
 {
   "permissions": {
-    "allow": []
+    "allow": [
+      "WebFetch",
+      "WebSearch"
+    ]
   }
 }
