@@ -307,6 +307,25 @@ function fetchResults(query, category = '', zip = '') {
           // No ZIP entered — show all state parks nationwide (already sorted by state)
           locationLabel = '🌲 Showing all State Parks nationwide — enter a ZIP to narrow to your state';
         }
+      } else if (category === 'education') {
+        if (nearbyData?.ok && nearbyData.results?.length) {
+          results = nearbyData.results;
+          const stateName = nearbyData.state || '';
+          locationLabel = `🎓 Showing senior education discounts for ${stateName}`;
+        } else if (nearbyData?.ok) {
+          // ZIP resolved to a state fine, but no education discount there yet
+          results = [];
+          const stateName = nearbyData.state || 'this state';
+          locationLabel = query
+            ? `No education discounts matching "${query}" found for ${stateName}`
+            : `No senior education discounts found for ${stateName} yet`;
+        } else if (zip.length === 5) {
+          results = [];
+          locationLabel = `Couldn't find education discounts for ZIP ${zip} — double-check the ZIP and try again`;
+        } else {
+          // No ZIP entered — show all education discounts nationwide
+          locationLabel = '🎓 Showing all Education discounts nationwide — enter a ZIP to narrow to your state';
+        }
       } else if (nearbyData?.ok && nearbyData.results?.length) {
         // ZIP search worked — show only nearby locations + local submissions for that ZIP
         const localResults = results.filter((r) => r.source === 'local');
