@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Perk Match — A HiddenPerks Game</title>
+<meta name="description" content="Play Perk Match — flip two cards to find matching senior discount categories and pick up a real savings tip with every match." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Baloo+2:wght@400;500;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#1a0d40">
+<style>
+  :root{
+    --bg:#1a0d40;
+    --panel:#2d1a65;
+    --card:#3a2472;
+    --text:#f7fbff;
+    --muted:#d9e5f3;
+    --border:rgba(255,255,255,0.12);
+    --gold:#ffd56f;
+    --mint:#66e2cf;
+    --coral:#ff7a5c;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body{
+    margin:0;
+    font-family:'Inter', Arial, sans-serif;
+    color:var(--text);
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    padding:24px 12px 56px;
+    background:
+      radial-gradient(circle at top, rgba(160, 100, 255, 0.15), transparent 22%),
+      radial-gradient(circle at right top, rgba(255, 213, 111, 0.10), transparent 22%),
+      linear-gradient(145deg, #1a0d40 0%, #2d1a65 45%, #160a38 100%);
+  }
+  img{max-width:100%;}
+
+  .page-shell{ width:min(560px, 100%); }
+
+  .hero-card{
+    position:relative;
+    padding:0;
+    margin-bottom:0;
+    text-align:center;
+    overflow:hidden;
+    background: linear-gradient(145deg, rgba(45, 26, 101, 0.98), rgba(26, 13, 64, 0.98));
+    border:1px solid var(--border);
+    border-radius:28px;
+    box-shadow:0 18px 42px rgba(0, 0, 0, 0.35);
+  }
+  .hero-image-link{ display:block; }
+  .hero-image{
+    display:block;
+    width:100%;
+    height:auto;
+  }
+  .hero-subtitle{
+    position:relative;
+    font-family:'Baloo 2', 'Trebuchet MS', sans-serif;
+    font-size:1.5rem;
+    font-weight:900;
+    color:var(--gold);
+    margin:0;
+    padding:4px 4% 8px;
+    text-align:center;
+    letter-spacing:0.12em;
+    background:rgba(45, 26, 101, 0.98);
+  }
+  .hero-subtitle::before{
+    content:'';
+    position:absolute;
+    top:-32px;left:0;right:0;height:32px;
+    background:linear-gradient(to bottom, transparent, rgba(45, 26, 101, 0.98));
+    pointer-events:none;
+  }
+
+  .hero-badge-row{ text-align:center; padding:14px 0 4px; }
+  .hero-badge{
+    display:inline-block;
+    background:rgba(255, 213, 111, 0.15);
+    border:1px solid rgba(255, 213, 111, 0.35);
+    color:#ffeaa8;
+    font-size:0.95rem;
+    font-weight:700;
+    border-radius:999px;
+    padding:7px 20px;
+    letter-spacing:0.03em;
+  }
+
+  .game-tagline{
+    text-align:center;
+    color:var(--muted);
+    font-size:1rem;
+    line-height:1.5;
+    margin:10px 4px 0;
+  }
+
+  .scoreboard{
+    display:flex;gap:12px;justify-content:center;margin:18px 0;
+  }
+  .stat{
+    background:linear-gradient(145deg, var(--card), var(--panel));
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:10px 22px;
+    font-size:1.25rem;font-weight:800;min-width:110px;text-align:center;
+    box-shadow:0 8px 20px rgba(0,0,0,0.25);
+  }
+  .stat span{
+    display:block;font-size:0.78rem;font-weight:900;color:var(--gold);
+    text-transform:uppercase;letter-spacing:0.1em;margin-bottom:2px;
+  }
+
+  .board{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+    width:100%;
+  }
+  .card{
+    aspect-ratio:3/3.6;
+    perspective:800px;cursor:pointer;border:none;background:none;padding:0;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .card-inner{
+    position:relative;width:100%;height:100%;
+    transition:transform .45s;transform-style:preserve-3d;
+  }
+  .card.flipped .card-inner{ transform:rotateY(180deg); }
+  .face{
+    position:absolute;inset:0;backface-visibility:hidden;
+    border-radius:14px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:4px;
+  }
+  .face-back{
+    background:linear-gradient(145deg, #ffe6a6, #ffb96d);
+    color:#1a0d40;
+    border:1px solid rgba(255,255,255,0.4);
+    font-family:'Baloo 2', sans-serif;font-size:1.9rem;font-weight:900;
+    box-shadow:0 8px 18px rgba(255, 213, 111, 0.18);
+  }
+  .face-back small{
+    font-size:0.62rem;font-family:'Inter',sans-serif;font-weight:800;
+    letter-spacing:0.1em;
+  }
+  .face-front{
+    background:linear-gradient(145deg, var(--card), var(--panel));
+    transform:rotateY(180deg);
+    border:2px dashed rgba(255, 213, 111, 0.45);
+    box-shadow:0 8px 18px rgba(0,0,0,0.3);
+  }
+  .face-front .icon{ font-size:clamp(1.6rem,7vw,2.2rem); }
+  .face-front .label{
+    font-weight:800;font-size:clamp(0.68rem,2.6vw,0.85rem);text-align:center;
+    padding:0 4px;line-height:1.15;color:var(--text);
+  }
+  .card.matched .face-front{
+    border-style:solid;border-color:var(--mint);
+    background:linear-gradient(145deg, rgba(102,226,207,0.16), var(--panel));
+    box-shadow:0 0 0 1px rgba(102,226,207,0.3), 0 8px 18px rgba(0,0,0,0.3);
+  }
+  .card.matched{ cursor:default; }
+  .card:focus-visible .card-inner{ outline:3px solid var(--gold); outline-offset:3px; border-radius:14px; }
+
+  .tip{
+    width:100%;margin-top:18px;
+    background:rgba(255, 213, 111, 0.08);
+    border:1px solid rgba(255, 213, 111, 0.3);
+    border-radius:18px;
+    padding:16px 20px;font-size:1.08rem;line-height:1.5;
+    color:var(--text);
+    display:none;
+  }
+  .tip.show{ display:block; animation:pop .3s ease; }
+  .tip strong{ color:var(--gold); }
+  @keyframes pop{ from{transform:scale(.96);opacity:0;} to{transform:scale(1);opacity:1;} }
+
+  .win{
+    width:100%;margin-top:18px;text-align:center;
+    background:linear-gradient(135deg, #ffd56f, #ff9d5c);
+    border:1px solid rgba(255,255,255,0.3);
+    border-radius:20px;
+    padding:22px;display:none;
+    box-shadow:0 12px 28px rgba(255, 213, 111, 0.25);
+  }
+  .win.show{ display:block; animation:pop .35s ease; }
+  .win h2{
+    font-family:'Baloo 2', sans-serif;font-size:1.5rem;margin:0 0 6px;color:#1a0d40;
+  }
+  .win p{ font-size:1.05rem;color:#3a2210;margin:0; }
+
+  .btn{
+    margin-top:22px;
+    font-family:'Baloo 2', sans-serif;font-size:1.15rem;font-weight:800;
+    background:linear-gradient(135deg, #ffd56f, #ffb830);
+    color:#1a0d40;border:none;
+    border-radius:999px;padding:14px 34px;cursor:pointer;
+    box-shadow:0 10px 22px rgba(255, 213, 111, 0.20);min-height:52px;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn:focus-visible{ outline:3px solid var(--mint); outline-offset:3px; }
+
+  .back-link{
+    margin-top:18px;
+    color:var(--muted);
+    font-size:0.95rem;
+    text-decoration:underline;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card-inner{ transition:none; }
+    .tip.show,.win.show{ animation:none; }
+  }
+
+  @media (max-width:420px){
+    .stat{ min-width:96px;padding:10px 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="page-shell">
+  <header class="hero-card">
+    <a class="hero-image-link" href="/" aria-label="Back to HiddenPerks home">
+      <img class="hero-image" src="hidden-perks-logo-2.jpg" alt="Hidden Perks logo" />
+    </a>
+    <p class="hero-subtitle">PERK MATCH</p>
+  </header>
+  <div class="hero-badge-row">
+    <span class="hero-badge">FLIP TWO CARDS TO FIND A MATCH</span>
+  </div>
+  <p class="game-tagline">Every match reveals a real senior-discount tip you can use today.</p>
+
+  <div class="scoreboard">
+    <div class="stat"><span>Matches</span><span id="matches">0 of 10</span></div>
+    <div class="stat"><span>Flips</span><span id="moves">0</span></div>
+  </div>
+
+  <div class="board" id="board" role="grid" aria-label="Memory match board"></div>
+
+  <div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+  <div class="win" id="win">
+    <h2>🎉 You matched them all!</h2>
+    <p>Great memory! Now go claim those perks — remember, it never hurts to ask.</p>
+  </div>
+
+  <div style="text-align:center;">
+    <button class="btn" id="newGame">New Game</button>
+    <br />
+    <a class="back-link" href="/">← Back to HiddenPerks</a>
+  </div>
+</div>
+
+<script>
+const PERKS = [
+  { icon:"🍽️", label:"Restaurants",
+    tip:"<strong>Restaurant tip:</strong> Many restaurants have unadvertised senior menus or discounts — the deal often only appears when you ask." },
+  { icon:"🛍️", label:"Shopping",
+    tip:"<strong>Shopping tip:</strong> Some retailers hold a weekly senior discount day. Ask at the register which day is yours to save." },
+  { icon:"💊", label:"Pharmacy",
+    tip:"<strong>Pharmacy tip:</strong> Ask your pharmacist about free senior savings programs — they can lower prices on prescriptions and everyday items." },
+  { icon:"🛒", label:"Grocery",
+    tip:"<strong>Grocery tip:</strong> Several grocery chains offer a senior discount one day a week — often Tuesday or Wednesday. Just ask customer service." },
+  { icon:"🎬", label:"Entertainment",
+    tip:"<strong>Entertainment tip:</strong> Theaters, museums, and attractions usually have senior pricing every day — not just matinees. Ask before you buy." },
+  { icon:"🎓", label:"Education",
+    tip:"<strong>Education tip:</strong> Many colleges let seniors audit classes for free or at a steep discount — a hidden gem most people never hear about." },
+  { icon:"✈️", label:"Travel",
+    tip:"<strong>Travel tip:</strong> Hotels, trains, and airlines often have senior rates — but only if you request them when booking." },
+  { icon:"💻", label:"Online",
+    tip:"<strong>Online tip:</strong> Many online services and subscriptions offer senior pricing — check the fine print or contact support and ask." },
+  { icon:"🏞️", label:"Parks",
+    tip:"<strong>Parks tip:</strong> The America the Beautiful Senior Pass gives lifetime access to national parks for a one-time fee — and many state parks discount too." },
+  { icon:"⛷️", label:"Ski Resorts",
+    tip:"<strong>Ski tip:</strong> Many resorts offer deeply discounted — sometimes free — lift tickets for seniors. Age thresholds vary, so always ask." },
+];
+
+const board   = document.getElementById("board");
+const tipBox  = document.getElementById("tip");
+const winBox  = document.getElementById("win");
+const movesEl = document.getElementById("moves");
+const matchEl = document.getElementById("matches");
+
+let first = null, lock = false, moves = 0, matched = 0;
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function newGame(){
+  first = null; lock = false; moves = 0; matched = 0;
+  movesEl.textContent = "0";
+  matchEl.textContent = "0 of " + PERKS.length;
+  tipBox.classList.remove("show");
+  winBox.classList.remove("show");
+  board.innerHTML = "";
+  const deck = shuffle([...PERKS, ...PERKS].map(p=>({...p, key:p.label})));
+  deck.forEach(p=>{
+    const btn = document.createElement("button");
+    btn.className = "card";
+    btn.dataset.key = p.key;
+    btn.setAttribute("aria-label","Hidden card");
+    btn.innerHTML = `
+      <div class="card-inner">
+        <div class="face face-back">$<small>PERK</small></div>
+        <div class="face face-front"><div class="icon">${p.icon}</div><div class="label">${p.label}</div></div>
+      </div>`;
+    btn.addEventListener("click", ()=>flip(btn, p));
+    board.appendChild(btn);
+  });
+}
+
+function flip(card, perk){
+  if(lock || card.classList.contains("flipped")) return;
+  card.classList.add("flipped");
+  card.setAttribute("aria-label", perk.label);
+  if(!first){ first = card; return; }
+
+  moves++; movesEl.textContent = moves;
+  if(first.dataset.key === card.dataset.key){
+    first.classList.add("matched");
+    card.classList.add("matched");
+    matched++;
+    matchEl.textContent = matched + " of " + PERKS.length;
+    tipBox.innerHTML = perk.tip;
+    tipBox.classList.add("show");
+    first = null;
+    if(matched === PERKS.length){
+      setTimeout(()=>{ winBox.classList.add("show"); }, 500);
+    }
+  } else {
+    lock = true;
+    const a = first; first = null;
+    setTimeout(()=>{
+      a.classList.remove("flipped");
+      card.classList.remove("flipped");
+      a.setAttribute("aria-label","Hidden card");
+      card.setAttribute("aria-label","Hidden card");
+      lock = false;
+    }, 1100);
+  }
+}
+
+document.getElementById("newGame").addEventListener("click", newGame);
+newGame();
+</script>
+
+<script data-goatcounter="https://hiddenperks.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
