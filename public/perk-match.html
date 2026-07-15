@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Perk Match — A HiddenPerks Game</title>
-<meta name="description" content="Play Perk Match — flip two cards to find matching senior discount categories and pick up a real savings tip with every match." />
+<title>The Flippin' Good Deals Game — A HiddenPerks Game</title>
+<meta name="description" content="Play The Flippin' Good Deals Game — flip two cards to find matching senior discount categories and pick up a real savings tip with every match." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link
@@ -63,13 +63,13 @@
   .hero-subtitle{
     position:relative;
     font-family:'Baloo 2', 'Trebuchet MS', sans-serif;
-    font-size:1.5rem;
+    font-size:clamp(1.05rem, 4.6vw, 1.4rem);
     font-weight:900;
     color:var(--gold);
     margin:0;
     padding:4px 4% 8px;
     text-align:center;
-    letter-spacing:0.12em;
+    letter-spacing:0.06em;
     background:rgba(45, 26, 101, 0.98);
   }
   .hero-subtitle::before{
@@ -227,12 +227,12 @@
     <a class="hero-image-link" href="/" aria-label="Back to HiddenPerks home">
       <img class="hero-image" src="hidden-perks-logo-2.jpg" alt="Hidden Perks logo" />
     </a>
-    <p class="hero-subtitle">PERK MATCH</p>
+    <p class="hero-subtitle">THE FLIPPIN' GOOD DEALS GAME</p>
   </header>
   <div class="hero-badge-row">
     <span class="hero-badge">FLIP TWO CARDS TO FIND A MATCH</span>
   </div>
-  <p class="game-tagline">Every match reveals a real senior-discount tip you can use today.</p>
+  <p class="game-tagline">Test your mental abilities by matching hidden perks discount categories!</p>
 
   <div class="scoreboard">
     <div class="stat"><span>Matches</span><span id="matches">0 of 10</span></div>
@@ -245,7 +245,7 @@
 
   <div class="win" id="win">
     <h2>🎉 You matched them all!</h2>
-    <p>Great memory! Now go claim those perks — remember, it never hurts to ask.</p>
+    <p>You still have a great memory! Now go and claim some hidden perks discounts!</p>
   </div>
 
   <div style="text-align:center;">
