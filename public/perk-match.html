@@ -212,12 +212,17 @@
   .btn:active{ transform:translateY(1px); }
   .btn:focus-visible{ outline:3px solid var(--mint); outline-offset:3px; }
 
-  .back-link{
-    margin-top:18px;
-    color:var(--muted);
-    font-size:0.95rem;
-    text-decoration:underline;
+  .btn-secondary{
+    display:inline-block;
+    margin-top:14px;
+    font-family:'Baloo 2', sans-serif;font-size:1.05rem;font-weight:800;
+    background:transparent;
+    color:var(--gold);border:2px solid var(--gold);
+    border-radius:999px;padding:12px 30px;cursor:pointer;
+    text-decoration:none;min-height:48px;
   }
+  .btn-secondary:active{ transform:translateY(1px); }
+  .btn-secondary:focus-visible{ outline:3px solid var(--mint); outline-offset:3px; }
 
   @media (prefers-reduced-motion: reduce){
     .card-inner{ transition:none; }
@@ -259,7 +264,7 @@
   <div style="text-align:center;">
     <button class="btn" id="newGame">New Game</button>
     <br />
-    <a class="back-link" href="/">← Back to HiddenPerks</a>
+    <a class="btn-secondary" href="/">← Back to HiddenPerks</a>
   </div>
 </div>
 
