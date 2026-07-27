@@ -223,27 +223,27 @@ app.get('/api/admin/submissions', adminLimiter, (req, res) => {
 });
 
 // POST /api/admin/approve/:id
-app.post('/api/admin/approve/:id', adminLimiter, (req, res) => {
+app.post('/api/admin/approve/:id', adminLimiter, async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const ok = approveSubmission(req.params.id);
-  if (!ok) return res.status(404).json({ ok: false, error: 'Submission not found.' });
-  res.json({ ok: true });
+  const result = await approveSubmission(req.params.id);
+  if (!result.found) return res.status(404).json({ ok: false, error: 'Submission not found.' });
+  res.json({ ok: true, persisted: result.persisted });
 });
 
 // POST /api/admin/reject/:id
-app.post('/api/admin/reject/:id', adminLimiter, (req, res) => {
+app.post('/api/admin/reject/:id', adminLimiter, async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const ok = rejectSubmission(req.params.id);
-  if (!ok) return res.status(404).json({ ok: false, error: 'Submission not found.' });
-  res.json({ ok: true });
+  const result = await rejectSubmission(req.params.id);
+  if (!result.found) return res.status(404).json({ ok: false, error: 'Submission not found.' });
+  res.json({ ok: true, persisted: result.persisted });
 });
 
 // POST /api/admin/edit/:id
-app.post('/api/admin/edit/:id', adminLimiter, (req, res) => {
+app.post('/api/admin/edit/:id', adminLimiter, async (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const updated = updateSubmission(req.params.id, req.body || {});
-  if (!updated) return res.status(404).json({ ok: false, error: 'Submission not found.' });
-  res.json({ ok: true, submission: updated });
+  const result = await updateSubmission(req.params.id, req.body || {});
+  if (!result.found) return res.status(404).json({ ok: false, error: 'Submission not found.' });
+  res.json({ ok: true, submission: result.submission, persisted: result.persisted });
 });
 
 // In-memory cache for /api/nearby responses, keyed by zip+category, to avoid

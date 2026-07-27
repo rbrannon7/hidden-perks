@@ -623,9 +623,14 @@
           if (idx !== -1) allSubmissions[idx] = data.submission;
           editingId = null;
           renderSubmissions();
+          if (data.persisted === false) warnNotPersisted();
         } else {
           alert(data.error || 'Failed to save changes.');
         }
+      }
+
+      function warnNotPersisted() {
+        alert('Saved for now, but failed to permanently persist to GitHub — this change may be lost on the next server restart. Check the GITHUB_TOKEN environment variable on Render.');
       }
 
       async function approve(id) {
@@ -640,6 +645,7 @@
           updateCounts();
           const card = document.getElementById(`card-${id}`);
           if (card) { card.classList.add('fading'); setTimeout(() => renderSubmissions(), 280); }
+          if (data.persisted === false) warnNotPersisted();
         }
       }
 
@@ -655,6 +661,7 @@
           updateCounts();
           const card = document.getElementById(`card-${id}`);
           if (card) { card.classList.add('fading'); setTimeout(() => renderSubmissions(), 280); }
+          if (data.persisted === false) warnNotPersisted();
         }
       }
 

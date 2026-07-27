@@ -5,13 +5,40 @@ const { textMatches } = require('./search');
 const dbDir = process.env.DATA_DIR || path.join(__dirname, 'db');
 const submissionsFile = path.join(dbDir, 'submissions.json');
 
+// Durable copy of *verified* local businesses, tracked in git. Render's free
+// tier has no persistent disk, so anything written only to `dbDir` at runtime
+// is wiped on the next restart/redeploy — this file (baked into the deployed
+// image) is what survives. Submitter emails are never written here since the
+// repo is public; they only live in the ephemeral `submissionsFile` copy.
+const verifiedBusinessesFile = path.join(__dirname, 'data', 'local-businesses.json');
+
+const GITHUB_OWNER = 'rbrannon7';
+const GITHUB_REPO_NAME = 'hidden-perks';
+const GITHUB_BRANCH = 'master';
+const GITHUB_FILE_PATH = 'data/local-businesses.json';
+
+function readVerifiedBusinessesSeed() {
+  try {
+    return JSON.parse(fs.readFileSync(verifiedBusinessesFile, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
 function ensureStorage() {
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
   if (!fs.existsSync(submissionsFile)) {
-    fs.writeFileSync(submissionsFile, '[]', 'utf8');
+    // Fresh container: seed from the durable, git-committed verified businesses
+    // so approved listings survive a restart even though this working copy doesn't.
+    const seed = readVerifiedBusinessesSeed().map((item) => ({
+      ...item,
+      submitted_by: item.submitted_by || '',
+      verified: 1,
+    }));
+    fs.writeFileSync(submissionsFile, JSON.stringify(seed, null, 2), 'utf8');
   }
 }
 
@@ -25,9 +52,55 @@ function writeSubmissions(items) {
   fs.writeFileSync(submissionsFile, JSON.stringify(items, null, 2), 'utf8');
 }
 
-function initializeDatabase() {
-  ensureStorage();
-  return { ok: true };
+// Commits the current set of verified businesses to GitHub via the Contents API,
+// so it's baked into the next deploy and survives future restarts. Returns false
+// (without throwing) if GITHUB_TOKEN isn't configured or the push fails — callers
+// surface that to the admin UI as a "saved locally, not persisted" warning.
+async function commitVerifiedBusinessesToGitHub(verifiedItems) {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    console.warn('GITHUB_TOKEN not set — verified local businesses were saved locally only.');
+    return false;
+  }
+
+  const redacted = verifiedItems.map(({ submitted_by, ...rest }) => rest);
+  const content = Buffer.from(JSON.stringify(redacted, null, 2) + '\n', 'utf8').toString('base64');
+  const apiUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`;
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/vnd.github+json',
+    'User-Agent': 'hiddenperks-admin',
+  };
+
+  try {
+    let sha;
+    const getResp = await fetch(`${apiUrl}?ref=${GITHUB_BRANCH}`, { headers });
+    if (getResp.ok) {
+      sha = (await getResp.json()).sha;
+    } else if (getResp.status !== 404) {
+      throw new Error(`GET failed: ${getResp.status}`);
+    }
+
+    const putResp = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Update verified local businesses (admin dashboard)',
+        content,
+        branch: GITHUB_BRANCH,
+        ...(sha ? { sha } : {}),
+      }),
+    });
+
+    if (!putResp.ok) {
+      throw new Error(`PUT failed: ${putResp.status} — ${await putResp.text()}`);
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Failed to persist verified local businesses to GitHub —', err.message);
+    return false;
+  }
 }
 
 function saveLocalBusiness(submission) {
@@ -79,10 +152,10 @@ function getAllSubmissions() {
   return readSubmissions();
 }
 
-function updateSubmission(id, fields) {
+async function updateSubmission(id, fields) {
   const items = readSubmissions();
   const idx = items.findIndex((item) => String(item.id) === String(id));
-  if (idx === -1) return false;
+  if (idx === -1) return { found: false };
 
   const editable = ['name', 'address', 'city', 'state', 'zip', 'category', 'discount', 'conditions'];
   for (const key of editable) {
@@ -100,28 +173,47 @@ function updateSubmission(id, fields) {
   }
 
   writeSubmissions(items);
-  return items[idx];
+
+  // Only verified (publicly-shown) edits need to be pushed to the durable copy —
+  // edits to a still-pending submission stay ephemeral, same as before.
+  let persisted = true;
+  if (items[idx].verified === 1) {
+    persisted = await commitVerifiedBusinessesToGitHub(items.filter((i) => i.verified === 1));
+  }
+
+  return { found: true, persisted, submission: items[idx] };
 }
 
-function approveSubmission(id) {
+async function approveSubmission(id) {
   const items = readSubmissions();
   const idx = items.findIndex((item) => String(item.id) === String(id));
-  if (idx === -1) return false;
+  if (idx === -1) return { found: false };
   items[idx].verified = 1;
   writeSubmissions(items);
-  return true;
+
+  const persisted = await commitVerifiedBusinessesToGitHub(items.filter((i) => i.verified === 1));
+  return { found: true, persisted };
 }
 
-function rejectSubmission(id) {
+async function rejectSubmission(id) {
   const items = readSubmissions();
+  const target = items.find((item) => String(item.id) === String(id));
+  if (!target) return { found: false };
+
   const filtered = items.filter((item) => String(item.id) !== String(id));
-  if (filtered.length === items.length) return false;
   writeSubmissions(filtered);
-  return true;
+
+  // Only need to re-push the durable copy if the deleted item had been verified —
+  // otherwise it was never committed to GitHub in the first place.
+  let persisted = true;
+  if (target.verified === 1) {
+    persisted = await commitVerifiedBusinessesToGitHub(filtered.filter((i) => i.verified === 1));
+  }
+
+  return { found: true, persisted };
 }
 
 module.exports = {
-  initializeDatabase,
   saveLocalBusiness,
   getVerifiedLocalBusinesses,
   getAllSubmissions,
