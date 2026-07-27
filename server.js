@@ -15,6 +15,11 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Lightweight health check — no DB access, used by uptime/keep-alive pings.
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 const submitLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
